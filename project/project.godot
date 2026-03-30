@@ -11,8 +11,8 @@ config_version=5
 [application]
 
 config/name="Strange Hands"
-run/main_scene="res://addons/maaacks_game_template/base/nodes/opening/opening.tscn"
-config/features=PackedStringArray("4.6")
+run/main_scene="uid://d0fh6mm2r7c6q"
+config/features=PackedStringArray("4.6", "C#")
 config/icon="res://icon.png"
 
 [autoload]

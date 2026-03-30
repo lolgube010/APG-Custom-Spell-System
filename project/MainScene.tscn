@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://d0fh6mm2r7c6q"]
+
+[ext_resource type="PackedScene" uid="uid://bei4nhkf8lwdo" path="res://addons/player_controller/PlayerController.tscn" id="1_3mqji"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_3mqji"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_x4av3"]
+sky_material = SubResource("ProceduralSkyMaterial_3mqji")
+
+[sub_resource type="Environment" id="Environment_rpqi1"]
+background_mode = 2
+sky = SubResource("Sky_x4av3")
+tonemap_mode = 2
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_x4av3"]
+size = Vector2(10, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3mqji"]
+size = Vector3(10.007538, 0.001, 9.983032)
+
+[node name="MainScene" type="Node" unique_id=1552911853]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1479959942]
+environment = SubResource("Environment_rpqi1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=297283936]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Player" parent="." unique_id=1706615978 instance=ExtResource("1_3mqji")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11697221, 0)
+
+[node name="Geo" type="Node3D" parent="." unique_id=1662974255]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Geo" unique_id=1041340485]
+mesh = SubResource("PlaneMesh_x4av3")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Geo/MeshInstance3D" unique_id=1275153290]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geo/MeshInstance3D/StaticBody3D" unique_id=1357819976]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0009613037, 0.014293939, 0.0138549805)
+shape = SubResource("BoxShape3D_3mqji")
+
+[node name="SpellSystem" type="Node" parent="." unique_id=1445000400]
+
+[node name="Creation UI" type="Control" parent="SpellSystem" unique_id=2303181]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="System" type="Node" parent="SpellSystem" unique_id=1986612148]
