@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://d0fh6mm2r7c6q"]
 
 [ext_resource type="PackedScene" uid="uid://bei4nhkf8lwdo" path="res://addons/player_controller/PlayerController.tscn" id="1_3mqji"]
-[ext_resource type="Script" uid="uid://dr60wuypcuf1x" path="res://MomoScripts/Spell_Execute.gd" id="2_x4av3"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_3mqji"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -48,9 +47,9 @@ shape = SubResource("BoxShape3D_3mqji")
 
 [node name="Creation UI" type="Control" parent="SpellSystem" unique_id=2303181]
 layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="System" type="Node" parent="SpellSystem" unique_id=1986612148]
-script = ExtResource("2_x4av3")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

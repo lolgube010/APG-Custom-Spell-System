@@ -13,7 +13,7 @@ config_version=5
 config/name="Strange Hands"
 run/main_scene="uid://d0fh6mm2r7c6q"
 config/features=PackedStringArray("4.6", "C#")
-config/icon="res://icon.png"
+config/icon="res://stuff/icon.png"
 
 [autoload]
 
