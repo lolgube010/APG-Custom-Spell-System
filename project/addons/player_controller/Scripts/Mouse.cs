@@ -22,7 +22,7 @@ public partial class Mouse : Node3D
 
 	public void Init(Node3D head, Camera3D cam, IsDead isDeadFunc)
 	{
-		Input.SetMouseMode(Input.MouseModeEnum.ConfinedHidden);
+		Input.SetMouseMode(Input.MouseModeEnum.Captured);
 
 		_head = head;
 		_camera = cam;
@@ -78,7 +78,7 @@ public partial class Mouse : Node3D
 	private void ToggleMouseMode()
 	{
 		// If it's currently locked, release it. Otherwise, lock it.
-		if (Input.MouseMode == Input.MouseModeEnum.ConfinedHidden)
+		if (Input.MouseMode == Input.MouseModeEnum.ConfinedHidden || Input.MouseMode == Input.MouseModeEnum.Captured)
 		{
 			Input.MouseMode = Input.MouseModeEnum.Visible;
 		}
