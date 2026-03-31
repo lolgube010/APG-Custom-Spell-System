@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://bei4nhkf8lwdo" path="res://addons/player_controller/PlayerController.tscn" id="1_3mqji"]
 [ext_resource type="Script" uid="uid://l676rw2rur7f" path="res://Scripts/main_scene.gd" id="1_rpqi1"]
-[ext_resource type="PackedScene" uid="uid://dj20y2vuteryh" path="res://SpellCreation.tscn" id="2_x4av3"]
+[ext_resource type="PackedScene" uid="uid://dj20y2vuteryh" path="res://Scripts/Spell_Creation/SpellCreation.tscn" id="2_x4av3"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_3mqji"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)

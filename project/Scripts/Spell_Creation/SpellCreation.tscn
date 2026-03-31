@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://dj20y2vuteryh"]
+
+[ext_resource type="Script" uid="uid://dgv3cd2soxmsd" path="res://Scripts/Spell_Creation/Spell_Creation.gd" id="1_egt78"]
+
+[node name="SpellCreation" type="Control" unique_id=529397850]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_egt78")
+
+[node name="GraphEdit" type="GraphEdit" parent="." unique_id=1740184128]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 38.0
+grow_horizontal = 2
+grow_vertical = 2
+scroll_offset = Vector2(-1175, -609)
+
+[node name="Button" type="Button" parent="." unique_id=846562466]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -1186.0
+offset_bottom = -689.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Add Node+"
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

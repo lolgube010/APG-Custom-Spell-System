@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://bpggdkyhwivgg"]
+
+[ext_resource type="Script" uid="uid://bgk0nf4rrj1bx" path="res://Scripts/Spell_Creation/graph_node.gd" id="1_1ysll"]
+
+[node name="GraphNode" type="GraphNode" unique_id=1257430505]
+offset_right = 356.0
+offset_bottom = 102.0
+resizable = true
+title = "Simple Node"
+slot/0/left_enabled = false
+slot/0/left_type = 0
+slot/0/left_color = Color(1, 1, 1, 1)
+slot/0/left_icon = null
+slot/0/right_enabled = false
+slot/0/right_type = 0
+slot/0/right_color = Color(1, 1, 1, 1)
+slot/0/right_icon = null
+slot/0/draw_stylebox = true
+script = ExtResource("1_1ysll")
+
+[node name="TextEdit" type="TextEdit" parent="." unique_id=1933725186]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "test"
+placeholder_text = "test"
+
+[connection signal="delete_request" from="." to="." method="_on_delete_request"]
