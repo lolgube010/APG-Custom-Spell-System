@@ -39,6 +39,7 @@ func _on_spell_creation_spell_data_created(spell_array: Array, spawn_transform: 
 	# 3. Put it in the world
 	get_tree().current_scene.add_child(new_spell)
 	new_spell.global_transform = player_root.global_transform
+	new_spell.global_transform.origin += Vector3(0, 2, 0)
 	#new_spell.global_transform = spawn_transform
 
 
