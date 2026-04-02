@@ -19,7 +19,7 @@ anchor_bottom = 1.0
 offset_top = 38.0
 grow_horizontal = 2
 grow_vertical = 2
-scroll_offset = Vector2(-1175, -609)
+right_disconnects = true
 
 [node name="Button" type="Button" parent="." unique_id=846562466]
 layout_mode = 1
@@ -32,4 +32,9 @@ grow_horizontal = 2
 grow_vertical = 2
 text = "Add Node+"
 
+[connection signal="connection_from_empty" from="GraphEdit" to="." method="_on_graph_edit_connection_from_empty"]
+[connection signal="connection_request" from="GraphEdit" to="." method="_on_graph_edit_connection_request"]
+[connection signal="connection_to_empty" from="GraphEdit" to="." method="_on_graph_edit_connection_to_empty"]
+[connection signal="delete_nodes_request" from="GraphEdit" to="." method="_on_graph_edit_delete_nodes_request"]
+[connection signal="disconnection_request" from="GraphEdit" to="." method="_on_graph_edit_disconnection_request"]
 [connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
