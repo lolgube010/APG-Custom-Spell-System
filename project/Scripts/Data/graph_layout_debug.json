@@ -1,0 +1,57 @@
+{
+	"connections": [
+		{
+			"from_node": "StartNode",
+			"from_port": 0,
+			"keep_alive": false,
+			"to_node": "SimpleNode_0",
+			"to_port": 5
+		},
+		{
+			"from_node": "SimpleNode_0",
+			"from_port": 5,
+			"keep_alive": false,
+			"to_node": "SimpleNode_1",
+			"to_port": 4
+		}
+	],
+	"nodes": {
+		"SimpleNode_0": {
+			"dropdown_states": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"is_dynamic": true,
+			"x": 260.0,
+			"y": 100.0
+		},
+		"SimpleNode_1": {
+			"dropdown_states": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"is_dynamic": true,
+			"x": 700.0,
+			"y": 120.0
+		},
+		"StartNode": {
+			"is_dynamic": false,
+			"x": 50.0,
+			"y": 200.0
+		}
+	}
+}

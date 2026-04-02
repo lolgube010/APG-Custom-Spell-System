@@ -6,7 +6,7 @@ var initial_position = Vector2(40,40)
 var nodeCount = 0
 @export var player_root: Node3D
 signal spell_data_created(spell_array: Array, spawn_transform: Transform3D)
-const SAVE_PATH = "user://graph_layout_debug.json"
+const SAVE_PATH = "res://Scripts/Data/graph_layout_debug.json"
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
