@@ -21,15 +21,13 @@ grow_horizontal = 2
 grow_vertical = 2
 right_disconnects = true
 
-[node name="Button" type="Button" parent="." unique_id=846562466]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_right = -1186.0
-offset_bottom = -689.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=626556773]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Button" type="Button" parent="HBoxContainer" unique_id=846562466]
+layout_mode = 2
 text = "Add Node+"
 
 [connection signal="connection_from_empty" from="GraphEdit" to="." method="_on_graph_edit_connection_from_empty"]
@@ -37,4 +35,4 @@ text = "Add Node+"
 [connection signal="connection_to_empty" from="GraphEdit" to="." method="_on_graph_edit_connection_to_empty"]
 [connection signal="delete_nodes_request" from="GraphEdit" to="." method="_on_graph_edit_delete_nodes_request"]
 [connection signal="disconnection_request" from="GraphEdit" to="." method="_on_graph_edit_disconnection_request"]
-[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="HBoxContainer/Button" to="." method="_on_button_pressed"]
