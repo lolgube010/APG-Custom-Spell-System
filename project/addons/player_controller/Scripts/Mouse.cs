@@ -84,7 +84,7 @@ public partial class Mouse : Node3D
 		}
 		else
 		{
-			Input.MouseMode = Input.MouseModeEnum.ConfinedHidden;
+			Input.MouseMode = Input.MouseModeEnum.Captured;
 		}
 	}
 

@@ -16,7 +16,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 38.0
+offset_top = 40.0
 grow_horizontal = 2
 grow_vertical = 2
 right_disconnects = true
@@ -30,9 +30,24 @@ offset_bottom = 40.0
 layout_mode = 2
 text = "Add Node+"
 
+[node name="Button2" type="Button" parent="HBoxContainer" unique_id=2070275660]
+layout_mode = 2
+text = "Save Nodes"
+
+[node name="Button3" type="Button" parent="HBoxContainer" unique_id=1696934495]
+layout_mode = 2
+text = "Load Nodes"
+
+[node name="Button4" type="Button" parent="HBoxContainer" unique_id=1861698957]
+layout_mode = 2
+text = "Clear Save"
+
 [connection signal="connection_from_empty" from="GraphEdit" to="." method="_on_graph_edit_connection_from_empty"]
 [connection signal="connection_request" from="GraphEdit" to="." method="_on_graph_edit_connection_request"]
 [connection signal="connection_to_empty" from="GraphEdit" to="." method="_on_graph_edit_connection_to_empty"]
 [connection signal="delete_nodes_request" from="GraphEdit" to="." method="_on_graph_edit_delete_nodes_request"]
 [connection signal="disconnection_request" from="GraphEdit" to="." method="_on_graph_edit_disconnection_request"]
 [connection signal="pressed" from="HBoxContainer/Button" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="HBoxContainer/Button2" to="." method="_on_button_2_pressed"]
+[connection signal="pressed" from="HBoxContainer/Button3" to="." method="_on_button_3_pressed"]
+[connection signal="pressed" from="HBoxContainer/Button4" to="." method="_on_button_4_pressed"]

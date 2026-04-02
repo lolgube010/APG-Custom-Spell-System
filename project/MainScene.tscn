@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://bei4nhkf8lwdo" path="res://addons/player_controller/PlayerController.tscn" id="1_3mqji"]
 [ext_resource type="Script" uid="uid://l676rw2rur7f" path="res://Scripts/main_scene.gd" id="1_rpqi1"]
 [ext_resource type="PackedScene" uid="uid://dj20y2vuteryh" path="res://Scripts/Spell_Creation/SpellCreation.tscn" id="2_x4av3"]
+[ext_resource type="Script" uid="uid://def4s2ew44578" path="res://Scripts/Spell_Casting/Spell_Casting.gd" id="4_uxrcv"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_3mqji"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -23,7 +24,6 @@ size = Vector2(10, 10)
 size = Vector3(10.007538, 0.001, 9.983032)
 
 [node name="MainScene" type="Node" unique_id=1552911853]
-script = ExtResource("1_rpqi1")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1479959942]
 environment = SubResource("Environment_rpqi1")
@@ -47,5 +47,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0009613037, 0.014293939, 0
 shape = SubResource("BoxShape3D_3mqji")
 
 [node name="SpellSystem" type="Node" parent="." unique_id=1445000400]
+script = ExtResource("1_rpqi1")
 
-[node name="SpellCreation" parent="SpellSystem" unique_id=529397850 instance=ExtResource("2_x4av3")]
+[node name="SpellCreation" parent="SpellSystem" unique_id=529397850 node_paths=PackedStringArray("player_root") instance=ExtResource("2_x4av3")]
+player_root = NodePath("../../Player")
+
+[node name="SpellCasting" type="Node" parent="SpellSystem" unique_id=1174360673 node_paths=PackedStringArray("player_root")]
+script = ExtResource("4_uxrcv")
+player_root = NodePath("../../Player")
+
+[connection signal="spell_data_created" from="SpellSystem/SpellCreation" to="SpellSystem/SpellCasting" method="_on_spell_creation_spell_data_created"]

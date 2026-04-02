@@ -84,7 +84,7 @@ tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.5517679, 0.73333335, 0.8659847, 1),
-"transitions": PackedFloat32Array(0.36602208, 6.72717, 3.4590015, 1.1486906, 9.189594),
+"transitions": PackedFloat32Array(1.9318777, 6.72717, 3.4590015, 1.1486906, 9.189594),
 "update": 0,
 "values": [Vector3(0.3051882, 0, 0), Vector3(1.2292179, 0, 0), Vector3(-0.23492135, 0, 0), Vector3(0.72274137, 0, 0), Vector3(0.3051882, 0, 0)]
 }
@@ -201,16 +201,10 @@ mouse_filter = 2
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, -0.64723)
 visible = false
 
-[node name="WandMesh" type="MeshInstance3D" parent="Head/CameraSmooth/Camera3D" unique_id=2115543607 node_paths=PackedStringArray("camera", "wand_point")]
+[node name="WandMesh" type="MeshInstance3D" parent="Head/CameraSmooth/Camera3D" unique_id=2115543607]
 transform = Transform3D(0.092913106, 0, 0, 0, 0.08838956, -0.20125204, 0, 0.027845372, 0.6388343, 0.633714, -0.38306212, -0.96050835)
 mesh = SubResource("BoxMesh_p870g")
 script = ExtResource("6_jkvsg")
-camera = NodePath("..")
-wand_point = NodePath("WandPoint")
-
-[node name="WandPoint" type="Marker3D" parent="Head/CameraSmooth/Camera3D/WandMesh" unique_id=1893710166]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 3.7252903e-09, 1, 0, 0.68950176, -0.78407836)
-gizmo_extents = 0.8
 
 [node name="HealthSystem" type="Node3D" parent="." unique_id=962749642]
 script = ExtResource("5_umw0l")
@@ -242,6 +236,7 @@ script = ExtResource("12_m2mxi")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=766896313]
 libraries/ = SubResource("AnimationLibrary_vd0e2")
+autoplay = &"cast_spell"
 script = ExtResource("13_vnh4e")
 
 [node name="HeadCollisionDetectors" type="Node3D" parent="." unique_id=955869766]
