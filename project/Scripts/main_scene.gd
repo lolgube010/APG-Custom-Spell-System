@@ -17,3 +17,8 @@ func _unhandled_input(event):
 				$SpellSystem/SpellCreation.hide() 
 			else: 
 				$SpellSystem/SpellCreation.show()
+		if event.pressed and event.keycode == KEY_4:
+			if $SpellSystem/SpellCreation.visible:
+				var results = $SpellSystem/SpellCreation.compile_spell()
+				for result in results:
+					print(result)
