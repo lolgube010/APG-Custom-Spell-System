@@ -4,47 +4,59 @@ extends Node
 var wand : Node
 const OrbComponent = preload("res://Scripts/Spell_Stuff/Shape_Orb.tscn")
 
+var fire_rate_timer: Timer
+var is_casting_continuous: bool = false
+var our_spell_array : Array
+
 func _ready() -> void:
 	wand = player_root.get_node("Head/CameraSmooth/Camera3D/WandMesh")
 	#var trans = wand.get_spell_spawn_transform()
+	#fire_rate_timer = Timer.new()
+	#fire_rate_timer.wait_time = 0.2 # Shoots 5 times a second
+	#fire_rate_timer.timeout.connect(_on_fire_rate_timeout)
+	#add_child(fire_rate_timer)
+	
+	wand.spell_cast.connect(_on_spell_cast)
+
+func _on_spell_cast():
+	print("POOP")
 	pass
 
 func _on_spell_creation_spell_data_created(spell_array: Array) -> void:
 	#momo temp
-	print("_on_spell_creation_spell_data_created ran!!!")
+	print("spell_casting.gd cached spell creation data!!!")
 	if spell_array.is_empty():
 		print("empty spell array!")
 		return
-	for result in spell_array:
-		print(result)
+	#for result in spell_array:
+		#print(result)
 	#momo temp 
-	
-	if spell_array.is_empty(): return
-	
-	# 1. Create the blank container
-	var new_spell = SpellBase.new()
-	new_spell.name = "ActiveSpell"
-	
-	# 2. Parse the recipe!
-	for component in spell_array:
-		match component["type"]:
-			"casting":
-				if component["value"] == SpellGlobals.SpellCasting.Burst:
-					print("Applying Burst Logic...")
-					# Burst just means "fire once right now". 
-					# Later, "Continuous" might spawn a timer here instead.
-					
-			"shape":
-				if component["value"] == SpellGlobals.SpellShape.Orb:
-					print("Applying Orb Shape...")
-					var orb = OrbComponent.instantiate()
-					new_spell.add_child(orb)
-					
-			# You can easily add "element" here later to turn it red, or "mod_float" to boost speed!
-
-	# 3. Put it in the world
-	get_tree().current_scene.add_child(new_spell)
-	new_spell.global_transform = wand.get_spell_spawn_transform()
+	our_spell_array = spell_array
+	#
+	## 1. Create the blank container
+	#var new_spell = SpellBase.new()
+	#new_spell.name = "ActiveSpell"
+	#
+	## 2. Parse the recipe!
+	#for component in spell_array:
+		#match component["type"]:
+			#"casting":
+				#if component["value"] == SpellGlobals.SpellCasting.Burst:
+					#print("Applying Burst Logic...")
+					## Burst just means "fire once right now". 
+					## Later, "Continuous" might spawn a timer here instead.
+					#
+			#"shape":
+				#if component["value"] == SpellGlobals.SpellShape.Orb:
+					#print("Applying Orb Shape...")
+					#var orb = OrbComponent.instantiate()
+					#new_spell.add_child(orb)
+					#
+			## You can easily add "element" here later to turn it red, or "mod_float" to boost speed!
+#
+	## 3. Put it in the world
+	#get_tree().current_scene.add_child(new_spell)
+	#new_spell.global_transform = wand.get_spell_spawn_transform()
 
 
 

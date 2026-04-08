@@ -18,20 +18,29 @@ func _ready() -> void:
 	start_node.position_offset = Vector2(50, 200) 
 	$GraphEdit.add_child(start_node)
 	
-	var spell_node = find_node_with_signal(player_root)
-	if spell_node:
-		spell_node.spell_cast.connect(_on_spell_data_created)
+	#var spell_node = find_node_with_signal(player_root)
+	#if spell_node:
+		#spell_node.spell_cast.connect(_on_spell_data_created)
 
-func find_node_with_signal(root: Node) -> Node:
-	# Check if this node has the script you are looking for
-	if "spell_cast" in root: 
-		return root
+#func find_node_with_signal(root: Node) -> Node:
+	## Check if this node has the script you are looking for
+	#if "spell_cast" in root: 
+		#return root
+	#
+	## Otherwise, check children
+	#for child in root.get_children():
+		#var found = find_node_with_signal(child)
+		#if found: return found
+	#return null
+
+func broadcast_spell_update() -> void:
+	# CRITICAL: We wait one frame before compiling. 
+	# This ensures GraphEdit has fully processed any deleted nodes or new wire arrays.
+	await get_tree().process_frame
 	
-	# Otherwise, check children
-	for child in root.get_children():
-		var found = find_node_with_signal(child)
-		if found: return found
-	return null
+	var compiled_array = compile_spell()
+	spell_data_created.emit(compiled_array)
+	print("Spell updated! Current array: ", compiled_array)
 
 func _on_button_pressed() -> void:
 	var node = simpleGraphNode.instantiate();
@@ -42,12 +51,13 @@ func _on_button_pressed() -> void:
 	nodeCount += 1
 	print("Node added! Current count is: ", nodeCount)
 	node.delete_request.connect(_on_node_delete_request.bind(node))
-
+	node.setting_changed.connect(_on_node_settings_changed)
+	
 func _on_node_delete_request(node_to_delete: Node) -> void:
 	nodeCount -= 1
 	print("Node deleted! Current count is: ", nodeCount)
 	node_to_delete.queue_free.call_deferred() #todo, maybe move to nodes.
-
+	broadcast_spell_update()
 
 func _on_graph_edit_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int) -> void:
 	# 1. Look through all existing connections in the graph
@@ -65,7 +75,8 @@ func _on_graph_edit_connection_request(from_node: StringName, from_port: int, to
 			
 	# 4. Now that the ports are guaranteed to be empty, make the new connection!
 	$GraphEdit.connect_node(from_node, from_port, to_node, to_port)
-
+	broadcast_spell_update()
+	
 func _on_graph_edit_connection_to_empty(from_node: StringName, from_port: int, release_position: Vector2) -> void:
 	# Loop through all active connections in the GraphEdit
 	for conn in $GraphEdit.get_connection_list():
@@ -73,18 +84,18 @@ func _on_graph_edit_connection_to_empty(from_node: StringName, from_port: int, r
 		if conn["from_node"] == from_node and conn["from_port"] == from_port:
 			# Disconnect it! We use the destination data stored in the connection dictionary
 			$GraphEdit.disconnect_node(conn["from_node"], conn["from_port"], conn["to_node"], conn["to_port"])
-
+	broadcast_spell_update()
 
 func _on_graph_edit_connection_from_empty(to_node: StringName, to_port: int, release_position: Vector2) -> void:
 	for conn in $GraphEdit.get_connection_list():
 		# This time we check the destination side of the wire
 		if conn["to_node"] == to_node and conn["to_port"] == to_port:
 			$GraphEdit.disconnect_node(conn["from_node"], conn["from_port"], conn["to_node"], conn["to_port"])
-
+	broadcast_spell_update()
 
 func _on_graph_edit_disconnection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int) -> void:
 	$GraphEdit.disconnect_node(from_node, from_port, to_node, to_port)
-
+	broadcast_spell_update()
 
 func _on_graph_edit_delete_nodes_request(nodes: Array[StringName]) -> void:
 	for node_name in nodes:
@@ -105,7 +116,7 @@ func _on_graph_edit_delete_nodes_request(nodes: Array[StringName]) -> void:
 		if node_to_delete:
 			nodeCount -= 1
 			node_to_delete.queue_free()
-
+	broadcast_spell_update()
 #[
   #{"type": "Casting", "value": 0}, 
   #{"type": "Shape", "value": 2},   
@@ -153,9 +164,9 @@ func _get_outgoing_connection(node_name: StringName, connections: Array) -> Dict
 	# Return an empty dictionary if no outgoing wire is found
 	return {}
 
-func _on_spell_data_created():
-	print("System received signal! Launching Spell")
-	spell_data_created.emit(compile_spell())
+#func _on_spell_data_created():
+	#print("System received signal! Launching Spell")
+	#spell_data_created.emit(compile_spell())
 
 # --- UPDATED SAVING AND LOADING ---
 
@@ -198,7 +209,7 @@ func save_graph_layout() -> void:
 		file.store_string(JSON.stringify(graph_data, "\t"))
 		file.close()
 		print("Graph layout saved successfully.")
-
+	broadcast_spell_update()
 
 func load_graph_layout():
 	if not FileAccess.file_exists(SAVE_PATH):
@@ -232,7 +243,8 @@ func load_graph_layout():
 				new_node.position_offset = pos
 				$GraphEdit.add_child(new_node)
 				new_node.delete_request.connect(_on_node_delete_request.bind(new_node))
-				
+				new_node.setting_changed.connect(_on_node_settings_changed)
+
 				# FIX: If we saved dropdown states, apply them to the node we just spawned!
 				var states = node_data.get("dropdown_states", [])
 				if states.size() > 0 and new_node.has_method("set_dropdown_states"):
@@ -256,6 +268,7 @@ func load_graph_layout():
 			$GraphEdit.connect_node(conn["from_node"], conn["from_port"], conn["to_node"], conn["to_port"])
 			
 		print("Graph layout loaded successfully.")
+	broadcast_spell_update()
 
 func clear_saved_graph_layout() -> void:
 	# Check if the file actually exists before trying to delete it
@@ -283,6 +296,11 @@ func clear_saved_graph_layout() -> void:
 		
 	# Reset your counter
 	nodeCount = 0
+	broadcast_spell_update()
+
+func _on_node_settings_changed():
+	print("node settings changed in spell_creation.gd!")
+	broadcast_spell_update()
 
 func _on_button_2_pressed() -> void:
 	save_graph_layout()

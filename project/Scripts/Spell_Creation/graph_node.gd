@@ -1,6 +1,7 @@
 extends GraphNode
 
 @onready var titlebar:HBoxContainer = get_titlebar_hbox()
+signal setting_changed
 
 func _ready() -> void:
 	# --- Set up the Close Button ---
@@ -31,7 +32,9 @@ func _ready() -> void:
 		# Populate the dropdown from the enum keys
 		for element_name in config["enum"].keys():
 			dropdown.add_item(element_name.capitalize())
-			
+		
+		dropdown.item_selected.connect(_on_dropdown_item_selected)
+		
 		row.add_child(dropdown)
 		
 		# 3. Add the entire row to the GraphNode
@@ -102,3 +105,11 @@ func set_dropdown_states(states: Array) -> void:
 					# Apply the saved integer back to the dropdown
 					dropdown.select(states[state_index])
 				state_index += 1
+	setting_changed.emit()
+
+func _on_dropdown_item_selected(_index: int) -> void:
+	# We don't actually need to know *which* index was selected here.
+	# We just need to shout "Hey, something changed!" so the main script 
+	# knows to re-run the compile_spell() loop.
+	print("node settings changed in graph_node.gd!")
+	setting_changed.emit()

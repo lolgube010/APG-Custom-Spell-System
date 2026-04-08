@@ -1,18 +1,18 @@
 {
 	"connections": [
 		{
-			"from_node": "StartNode",
-			"from_port": 0,
-			"keep_alive": false,
-			"to_node": "SimpleNode_0",
-			"to_port": 5
-		},
-		{
 			"from_node": "SimpleNode_0",
 			"from_port": 5,
 			"keep_alive": false,
 			"to_node": "SimpleNode_1",
 			"to_port": 4
+		},
+		{
+			"from_node": "StartNode",
+			"from_port": 0,
+			"keep_alive": false,
+			"to_node": "SimpleNode_0",
+			"to_port": 5
 		}
 	],
 	"nodes": {
@@ -21,7 +21,7 @@
 				0,
 				0,
 				0,
-				0,
+				1,
 				0,
 				0,
 				0,
