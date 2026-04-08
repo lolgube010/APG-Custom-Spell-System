@@ -5,7 +5,7 @@ var startGraphNode = load("res://Scripts/Spell_Creation/Scenes/start_node.tscn")
 var initial_position = Vector2(40,40)
 var nodeCount = 0
 @export var player_root: Node3D
-signal spell_data_created(spell_array: Array, spawn_transform: Transform3D)
+signal spell_data_created(spell_array: Array)
 const SAVE_PATH = "res://Scripts/Data/graph_layout_debug.json"
 
 # Called when the node enters the scene tree for the first time.
@@ -153,9 +153,9 @@ func _get_outgoing_connection(node_name: StringName, connections: Array) -> Dict
 	# Return an empty dictionary if no outgoing wire is found
 	return {}
 
-func _on_spell_data_created(spawn_transform: Transform3D):
+func _on_spell_data_created():
 	print("System received signal! Launching Spell")
-	spell_data_created.emit(compile_spell(), spawn_transform)
+	spell_data_created.emit(compile_spell())
 
 # --- UPDATED SAVING AND LOADING ---
 

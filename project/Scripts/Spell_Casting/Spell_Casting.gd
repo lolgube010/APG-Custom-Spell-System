@@ -1,9 +1,15 @@
 extends Node
 
 @export var player_root: Node3D
+var wand : Node
 const OrbComponent = preload("res://Scripts/Spell_Stuff/Shape_Orb.tscn")
 
-func _on_spell_creation_spell_data_created(spell_array: Array, spawn_transform: Transform3D) -> void:
+func _ready() -> void:
+	wand = player_root.get_node("Head/CameraSmooth/Camera3D/WandMesh")
+	#var trans = wand.get_spell_spawn_transform()
+	pass
+
+func _on_spell_creation_spell_data_created(spell_array: Array) -> void:
 	#momo temp
 	print("_on_spell_creation_spell_data_created ran!!!")
 	if spell_array.is_empty():
@@ -38,7 +44,7 @@ func _on_spell_creation_spell_data_created(spell_array: Array, spawn_transform: 
 
 	# 3. Put it in the world
 	get_tree().current_scene.add_child(new_spell)
-	new_spell.global_transform = spawn_transform
+	new_spell.global_transform = wand.get_spell_spawn_transform()
 
 
 

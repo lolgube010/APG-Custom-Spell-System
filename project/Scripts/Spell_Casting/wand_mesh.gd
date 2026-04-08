@@ -2,7 +2,8 @@ extends Node
 @onready var animation_player: AnimationPlayer = $"../../../../AnimationPlayer"
 @export var camera: Camera3D
 @export var wand_point: Marker3D
-signal spell_cast(spawn_transform: Transform3D)
+signal spell_cast()
+signal spell_stop
 
 func _unhandled_input(event):
 	if event is InputEventMouseButton:
@@ -10,10 +11,11 @@ func _unhandled_input(event):
 			if event.pressed:
 				animation_player.play("cast_hold")
 			if !event.pressed:
-				animation_player.play("cast_release")
+				animation_player.play("cast_release", 0.1)
+				spell_stop.emit()
 
 func animation_callback_point():
-	spell_cast.emit(get_spell_spawn_transform())
+	spell_cast.emit()
 
 func get_spell_spawn_transform() -> Transform3D:
 	# 1. Start with a blank transform
