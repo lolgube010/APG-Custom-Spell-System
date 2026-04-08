@@ -4,41 +4,81 @@ extends Node
 var wand : Node
 const OrbComponent = preload("res://Scripts/Spell_Stuff/Shape_Orb.tscn")
 
-var fire_rate_timer: Timer
-var is_casting_continuous: bool = false
+# State tracking
 var our_spell_array : Array
+var current_casting_type: int = -1 # We will cache this when equipped!
+
+# Continuous variables
+var fire_rate_timer: Timer
+
+# Charge variables
+var is_charging: bool = false
+var charge_start_time: float = 0.0
 
 func _ready() -> void:
 	wand = player_root.get_node("Head/CameraSmooth/Camera3D/WandMesh")
 	#var trans = wand.get_spell_spawn_transform()
-	#fire_rate_timer = Timer.new()
-	#fire_rate_timer.wait_time = 0.2 # Shoots 5 times a second
-	#fire_rate_timer.timeout.connect(_on_fire_rate_timeout)
-	#add_child(fire_rate_timer)
+	fire_rate_timer = Timer.new()
+	fire_rate_timer.wait_time = 0.2 # Shoots 5 times a second
+	fire_rate_timer.timeout.connect(_on_fire_rate_timeout)
+	add_child(fire_rate_timer)
 	
 	wand.spell_cast.connect(_on_spell_cast)
 
-func _on_spell_cast():
-	print("POOP")
-	pass
-
 func _on_spell_creation_spell_data_created(spell_array: Array) -> void:
-	#momo temp
-	print("spell_casting.gd cached spell creation data!!!")
 	if spell_array.is_empty():
-		print("empty spell array!")
+		print("spell_casting.gd empty spell array!")
 		return
+	print("spell_casting.gd cached spell creation data!!!")
 	#for result in spell_array:
 		#print(result)
-	#momo temp 
 	our_spell_array = spell_array
-	#
-	## 1. Create the blank container
-	#var new_spell = SpellBase.new()
-	#new_spell.name = "ActiveSpell"
-	#
+	
+	for component in spell_array:
+		if component["type"] == "casting":
+			current_casting_type = component["value"]
+			break
+
+func _on_spell_cast():
+	if our_spell_array.is_empty(): 
+		return
+		
+	var spellTransform = wand.get_spell_spawn_transform()
+		
+	match current_casting_type:
+		SpellGlobals.SpellCasting.Burst:
+			_spawn_spell_object(spellTransform)
+			
+		SpellGlobals.SpellCasting.Continous:
+			_spawn_spell_object(spellTransform)
+			fire_rate_timer.start()
+			
+		SpellGlobals.SpellCasting.ChargeUp:
+			is_charging = true
+			charge_start_time = Time.get_ticks_msec()
+			print("Charging spell...")
+			# (Optional) You could spawn a visual-only particle effect on the wand tip here
+			
+		SpellGlobals.SpellCasting.SelfInstant:
+			# Override the wand transform with the player's center/feet
+			_spawn_spell_object(player_root.global_transform)
+			
+		SpellGlobals.SpellCasting.SelfToggle:
+			pass
+			#if is_instance_valid(active_toggle_spell):
+				# If it's already on, turn it off
+				#active_toggle_spell.queue_free()
+				#active_toggle_spell = null
+			#else:
+				## If it's off, turn it on and save the reference
+				#active_toggle_spell = _spawn_spell_object(player_root.global_transform)
+				
+		SpellGlobals.SpellCasting.Delayed:
+			# Pass a special flag to the factory so the spell knows it's a time-bomb
+			_spawn_spell_object(spellTransform, 0.0, true)
+			
 	## 2. Parse the recipe!
-	#for component in spell_array:
+	#for component in our_spell_array:
 		#match component["type"]:
 			#"casting":
 				#if component["value"] == SpellGlobals.SpellCasting.Burst:
@@ -57,9 +97,35 @@ func _on_spell_creation_spell_data_created(spell_array: Array) -> void:
 	## 3. Put it in the world
 	#get_tree().current_scene.add_child(new_spell)
 	#new_spell.global_transform = wand.get_spell_spawn_transform()
+	pass
 
+func _on_fire_rate_timeout() -> void:
+	if wand:
+		_spawn_spell_object(wand.get_spell_spawn_transform())
 
-
+func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float = 0.0, is_delayed: bool = false) -> Node3D:
+	var new_spell = SpellBase.new()
+	new_spell.name = "ActiveSpell"
+	
+	# Apply special casting modifiers to the base spell before checking shapes
+	if charge_multiplier > 0.0:
+		new_spell.damage *= (1.0 + charge_multiplier)
+		new_spell.speed *= (1.0 + charge_multiplier * 0.5)
+	
+	if is_delayed:
+		new_spell.is_time_bomb = true # Assume SpellBase has this variable to handle its own delay logic
+	
+	for component in our_spell_array:
+		match component["type"]:
+			"shape":
+				if component["value"] == SpellGlobals.SpellShape.Orb:
+					var orb = OrbComponent.instantiate()
+					new_spell.add_child(orb)
+					
+	get_tree().current_scene.add_child(new_spell)
+	new_spell.global_transform = spawn_transform
+	
+	return new_spell
 
 # old ver below
 
