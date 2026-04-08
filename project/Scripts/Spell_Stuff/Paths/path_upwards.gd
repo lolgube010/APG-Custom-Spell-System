@@ -1,9 +1,4 @@
-extends Node
-
-var parent_spell: SpellBase
-
-func _ready() -> void:
-	parent_spell = get_parent() as SpellBase
+extends PathBase
 
 func _physics_process(delta: float) -> void:
 	if not parent_spell: return

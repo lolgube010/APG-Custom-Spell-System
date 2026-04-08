@@ -12,5 +12,11 @@ var split_count: int = 0
 var is_piercing: bool = false
 var does_ricochet: bool = false
 
+var lifetime: float = 5.0
+
 # Arrays to hold effects that haven't been applied to a shape yet
 var pending_effects: Array[int] = []
+
+func _ready() -> void:
+	await get_tree().create_timer(lifetime).timeout
+	queue_free()

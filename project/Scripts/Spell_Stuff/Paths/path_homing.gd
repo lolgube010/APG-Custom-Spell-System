@@ -1,14 +1,13 @@
-extends Node
+extends PathBase
 
 # Steers toward the nearest node in the "enemies" group.
 # Tag your enemy nodes with the "enemies" group in the Godot editor.
 
-var parent_spell: SpellBase
 var target: Node3D = null
 const TURN_SPEED: float = 3.0
 
 func _ready() -> void:
-	parent_spell = get_parent() as SpellBase
+	super()
 	_find_nearest_target()
 
 func _find_nearest_target() -> void:

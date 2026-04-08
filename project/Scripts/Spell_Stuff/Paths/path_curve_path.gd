@@ -1,13 +1,12 @@
-extends Node
+extends PathBase
 
-var parent_spell: SpellBase
 var direction: Vector3
 var turn_rate: float
 var initialized: bool = false
 const BASE_TURN_RATE: float = 1.2  # radians per second
 
 func _ready() -> void:
-	parent_spell = get_parent() as SpellBase
+	super()
 	turn_rate = BASE_TURN_RATE * (1.0 if randf() > 0.5 else -1.0)
 
 func _physics_process(delta: float) -> void:

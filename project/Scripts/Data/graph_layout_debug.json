@@ -11,8 +11,15 @@
 			"from_node": "Simple Node 0",
 			"from_port": 7,
 			"keep_alive": false,
+			"to_node": "Simple Node 2",
+			"to_port": 2
+		},
+		{
+			"from_node": "Simple Node 2",
+			"from_port": 2,
+			"keep_alive": false,
 			"to_node": "Simple Node 1",
-			"to_port": 8
+			"to_port": 6
 		}
 	],
 	"nodes": {
@@ -25,13 +32,13 @@
 				0,
 				0,
 				0,
-				2,
+				1,
 				0,
 				0,
 				0
 			],
 			"is_dynamic": true,
-			"x": 260.0,
+			"x": 280.0,
 			"y": 60.0
 		},
 		"Simple Node 1": {
@@ -44,12 +51,30 @@
 				0,
 				0,
 				0,
-				3,
+				0,
 				0,
 				0
 			],
 			"is_dynamic": true,
-			"x": 720.0,
+			"x": 1140.0,
+			"y": 60.0
+		},
+		"Simple Node 2": {
+			"dropdown_states": [
+				0,
+				0,
+				4,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"is_dynamic": true,
+			"x": 700.0,
 			"y": 60.0
 		},
 		"StartNode": {

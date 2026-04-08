@@ -1,7 +1,5 @@
-extends Node
+extends EffectBase
 
-var player_root
-var duration: float = 5.0
 const TIME_SCALE: float = 0.3
 
 func _ready() -> void:

@@ -1,17 +1,13 @@
-extends Node
+extends PathBase
 
 # Moves forward (like LineOfSight) but snaps side-to-side in a sharp triangular wave.
 
-var parent_spell: SpellBase
 var forward: Vector3
 var right: Vector3
 var elapsed: float = 0.0
 var initialized: bool = false
 const FREQUENCY: float = 2.5  # zig-zags per second
 const AMPLITUDE: float = 5.0  # lateral speed at peak (m/s)
-
-func _ready() -> void:
-	parent_spell = get_parent() as SpellBase
 
 func _physics_process(delta: float) -> void:
 	if not parent_spell: return
