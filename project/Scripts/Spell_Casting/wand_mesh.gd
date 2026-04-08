@@ -6,8 +6,11 @@ signal spell_cast(spawn_transform: Transform3D)
 
 func _unhandled_input(event):
 	if event is InputEventMouseButton:
-		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			animation_player.play("cast_spell")
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				animation_player.play("cast_hold")
+			if !event.pressed:
+				animation_player.play("cast_release")
 
 func animation_callback_point():
 	spell_cast.emit(get_spell_spawn_transform())
