@@ -23,6 +23,13 @@ enum SpellAmplification { Half, Double, Quad, Ten }
 #a trigger for when a spell will spawn another spell
 enum SpellTrigger { OnHit, OnEnd, OnTimer, OnCast, OnKill }
 
+const ELEMENT_COLORS: Dictionary = {
+	SpellElement.FIRE:      Color(1.0, 0.25, 0.0),
+	SpellElement.ICE:       Color(0.2,  0.85, 1.0),
+	SpellElement.LIGHTNING: Color(1.0, 0.95, 0.1),
+	SpellElement.ARCANE:    Color(0.65, 0.0,  1.0),
+}
+
 const SHAPE_SCENES: Dictionary = {
 	SpellShape.Orb: preload("res://Scripts/Spell_Stuff/Shape_Orb.tscn"),
 }
