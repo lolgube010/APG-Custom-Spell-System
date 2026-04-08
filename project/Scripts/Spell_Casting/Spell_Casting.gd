@@ -26,6 +26,7 @@ const DEFAULT_CAST_DELAY: float = 2.0
 
 # Split modifier
 const SPLIT_ANGLE_STEP_DEG: float = 20.0  # degrees between adjacent split projectiles
+const SPLIT_POS_OFFSET: float = 0.8       # metres of lateral separation between splits at spawn
 
 func _ready() -> void:
 	wand = player_root.get_node("Head/CameraSmooth/Camera3D/WandMesh")
@@ -95,13 +96,14 @@ func _schedule_spell(spawn_transform: Transform3D, charge_multiplier: float = 0.
 		await get_tree().create_timer(delay).timeout
 
 	var split_count := _get_split_count()
+	var right := spawn_transform.basis.x  # camera-right, works for any aim direction
 	for i in range(split_count):
-		# Centre the spread around the aim direction.
-		# Each shot is SPLIT_ANGLE_STEP_DEG apart; the whole fan is centred on 0°.
-		var angle := deg_to_rad(SPLIT_ANGLE_STEP_DEG * (i - (split_count - 1) / 2.0))
+		# Centre both the angular fan and the lateral offset around shot 0.
+		var t := i - (split_count - 1) / 2.0
+		var angle := deg_to_rad(SPLIT_ANGLE_STEP_DEG * t)
 		var rotated := Transform3D(
 			Basis(Vector3.UP, angle) * spawn_transform.basis,
-			spawn_transform.origin
+			spawn_transform.origin + right * SPLIT_POS_OFFSET * t
 		)
 		_spawn_spell_object(rotated, charge_multiplier)
 
@@ -110,6 +112,12 @@ func _get_split_count() -> int:
 		if component["type"] == "mod_int" and component["value"] == SpellGlobals.SpellModifierInt.Split:
 			return maxi(1, component.get("amount", 1))
 	return 1
+
+func _get_duration_mult() -> float:
+	for component in our_spell_array:
+		if component["type"] == "mod_float" and component["value"] == SpellGlobals.SpellModifierFloat.Duration:
+			return maxf(0.1, component.get("amount", 1.0))
+	return 1.0
 
 func _get_cast_delay() -> float:
 	for component in our_spell_array:
@@ -140,7 +148,7 @@ func _apply_self_effects(is_toggle: bool) -> void:
 			var node := Node.new()
 			node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
 			node.player_root = player_root
-			node.duration = DEFAULT_EFFECT_DURATION
+			node.duration = DEFAULT_EFFECT_DURATION * _get_duration_mult()
 			player_root.add_child(node)
 
 func _apply_hold_effects() -> void:

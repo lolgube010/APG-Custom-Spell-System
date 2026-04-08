@@ -18,7 +18,7 @@ sky = SubResource("Sky_x4av3")
 tonemap_mode = 2
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_x4av3"]
-size = Vector2(50, 50)
+size = Vector2(10, 10)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3mqji"]
 size = Vector3(10.007538, 0.001, 9.983032)
@@ -42,6 +42,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11697221, 0)
 [node name="Geo" type="Node3D" parent="." unique_id=1662974255]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Geo" unique_id=1041340485]
+transform = Transform3D(3.6463046, 0, 0, 0, 1, 0, 0, 0, 3.6463046, 0, 0, 0)
 mesh = SubResource("PlaneMesh_x4av3")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Geo/MeshInstance3D" unique_id=1275153290]

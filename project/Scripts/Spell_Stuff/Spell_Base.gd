@@ -7,7 +7,6 @@ var current_path: int = -1
 var damage: float = 10.0
 var speed: float = 10.0
 var scale_mult: Vector3 = Vector3.ONE
-var duration_mult: float = 1.0
 var split_count: int = 0
 var is_piercing: bool = false
 var does_ricochet: bool = false
