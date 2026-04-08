@@ -5,7 +5,7 @@ enum SpellElement { FIRE, ICE, LIGHTNING, ARCANE }
 #spell modifiers that are vectors
 enum SpellModifierVec { Size }
 #spell modifiers that are floats
-enum SpellModifierFloat { CastSpeed, MoveSpeed, Duration, CastForce }
+enum SpellModifierFloat { CastSpeed, MoveSpeed, Duration, CastForce, Delay }
 #spell modifiers that are integeers
 enum SpellModifierInt { Split }
 #spell modifiers that are boolean
@@ -15,7 +15,7 @@ enum SpellPath { LineOfSight, CurvePath, SigZagLineOfSight, Upwards, Homing, Boo
 #decides what shape the spell will take
 enum SpellShape { Orb, AOE, Beam, Explode, Cone, Wall, Deployable, GravityProjectile, Trail }
 #decides how the spell is cast
-enum SpellCasting { Burst, Continous, SelfInstant, SelfToggle, ChargeUp, Delayed}
+enum SpellCasting { Burst, Continous, SelfInstant, SelfToggle, ChargeUp }
 #decides the effect the spell will have when hitting a target
 enum SpellEffect { Scale, MoveSpeed, SlowMo, Levitation, Throw, Poison, Thorns, Invincibilty}
 #types of amplifications for nodes
@@ -34,6 +34,17 @@ const PATH_SCRIPTS: Dictionary = {
 	SpellPath.Upwards:           preload("res://Scripts/Spell_Stuff/Paths/path_upwards.gd"),
 	SpellPath.Homing:            preload("res://Scripts/Spell_Stuff/Paths/path_homing.gd"),
 	SpellPath.Boomerang:         preload("res://Scripts/Spell_Stuff/Paths/path_boomerang.gd"),
+}
+
+const EFFECT_SCRIPTS: Dictionary = {
+	SpellEffect.Scale:        preload("res://Scripts/Spell_Stuff/Effects/effect_scale.gd"),
+	SpellEffect.MoveSpeed:    preload("res://Scripts/Spell_Stuff/Effects/effect_move_speed.gd"),
+	SpellEffect.SlowMo:       preload("res://Scripts/Spell_Stuff/Effects/effect_slow_mo.gd"),
+	SpellEffect.Levitation:   preload("res://Scripts/Spell_Stuff/Effects/effect_levitation.gd"),
+	SpellEffect.Throw:        preload("res://Scripts/Spell_Stuff/Effects/effect_throw.gd"),
+	SpellEffect.Poison:       preload("res://Scripts/Spell_Stuff/Effects/effect_poison.gd"),
+	SpellEffect.Thorns:       preload("res://Scripts/Spell_Stuff/Effects/effect_thorns.gd"),
+	SpellEffect.Invincibilty: preload("res://Scripts/Spell_Stuff/Effects/effect_invincibility.gd"),
 }
 
 var attribute_configs = [
