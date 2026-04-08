@@ -35,13 +35,25 @@ func _ready() -> void:
 	#return null
 
 func broadcast_spell_update() -> void:
-	# CRITICAL: We wait one frame before compiling. 
+	# CRITICAL: We wait one frame before compiling.
 	# This ensures GraphEdit has fully processed any deleted nodes or new wire arrays.
 	await get_tree().process_frame
-	
+	_update_highlights()
 	var compiled_array = compile_spell()
 	spell_data_created.emit(compiled_array)
 	print("Spell updated! Current array: ", compiled_array)
+
+func _update_highlights() -> void:
+	for child in $GraphEdit.get_children():
+		if child is GraphNode and child.has_method("clear_highlights"):
+			child.clear_highlights()
+	for conn in $GraphEdit.get_connection_list():
+		var from_node = $GraphEdit.get_node_or_null(NodePath(conn["from_node"]))
+		var to_node   = $GraphEdit.get_node_or_null(NodePath(conn["to_node"]))
+		if from_node and from_node.has_method("highlight_port"):
+			from_node.highlight_port(conn["from_port"], true)
+		if to_node and to_node.has_method("highlight_port"):
+			to_node.highlight_port(conn["to_port"], true)
 
 func _on_button_pressed() -> void:
 	var node = simpleGraphNode.instantiate();
@@ -61,20 +73,15 @@ func _on_node_delete_request(node_to_delete: Node) -> void:
 	broadcast_spell_update()
 
 func _on_graph_edit_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int) -> void:
-	# 1. Look through all existing connections in the graph
+	# Enforce one connection per node side: remove any existing outgoing wire from
+	# from_node (any port) and any existing incoming wire to to_node (any port).
+	var to_remove: Array = []
 	for conn in $GraphEdit.get_connection_list():
-		
-		# 2. Does the OUTPUT port we are dragging FROM already have a wire?
-		if conn["from_node"] == from_node and conn["from_port"] == from_port:
-			# Unplug the old wire
-			$GraphEdit.disconnect_node(conn["from_node"], conn["from_port"], conn["to_node"], conn["to_port"])
-			
-		# 3. Does the INPUT port we are dragging TO already have a wire?
-		if conn["to_node"] == to_node and conn["to_port"] == to_port:
-			# Unplug the old wire
-			$GraphEdit.disconnect_node(conn["from_node"], conn["from_port"], conn["to_node"], conn["to_port"])
-			
-	# 4. Now that the ports are guaranteed to be empty, make the new connection!
+		if conn["from_node"] == from_node or conn["to_node"] == to_node:
+			to_remove.append(conn)
+	for conn in to_remove:
+		$GraphEdit.disconnect_node(conn["from_node"], conn["from_port"], conn["to_node"], conn["to_port"])
+
 	$GraphEdit.connect_node(from_node, from_port, to_node, to_port)
 	broadcast_spell_update()
 	
