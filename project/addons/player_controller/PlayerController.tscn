@@ -88,6 +88,20 @@ tracks/0/keys = {
 "update": 0,
 "values": [Vector3(0.3051882, 0, 0), Vector3(1.2292179, 0, 0), Vector3(-0.23492135, 0, 0), Vector3(0.72274137, 0, 0), Vector3(0.3051882, 0, 0)]
 }
+tracks/1/type = "method"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Head/CameraSmooth/Camera3D/WandMesh")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.73333335),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"animation_callback_point"
+}]
+}
 
 [sub_resource type="Animation" id="Animation_tsmqm"]
 resource_name = "player_head_on_dying1"
@@ -202,7 +216,7 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 
 visible = false
 
 [node name="WandMesh" type="MeshInstance3D" parent="Head/CameraSmooth/Camera3D" unique_id=2115543607 node_paths=PackedStringArray("camera", "wand_point")]
-transform = Transform3D(0.092913106, 0, 0, 0, 0.08838956, -0.20125204, 0, 0.027845372, 0.6388343, 0.633714, -0.38306212, -0.96050835)
+transform = Transform3D(0.092913106, 0, 0, 0, 0.08838957, -0.20125203, 0, 0.027845375, 0.63883424, 0.633714, -0.38306212, -0.96050835)
 mesh = SubResource("BoxMesh_p870g")
 script = ExtResource("6_jkvsg")
 camera = NodePath("..")

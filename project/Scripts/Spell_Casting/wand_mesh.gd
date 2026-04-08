@@ -8,7 +8,9 @@ func _unhandled_input(event):
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			animation_player.play("cast_spell")
-			spell_cast.emit(get_spell_spawn_transform())
+
+func animation_callback_point():
+	spell_cast.emit(get_spell_spawn_transform())
 
 func get_spell_spawn_transform() -> Transform3D:
 	# 1. Start with a blank transform
