@@ -24,6 +24,9 @@ var _active_hold_effects: Dictionary = {}   # { SpellEffect value: Node }
 # Delayed modifier
 const DEFAULT_CAST_DELAY: float = 2.0
 
+# Split modifier
+const SPLIT_ANGLE_STEP_DEG: float = 20.0  # degrees between adjacent split projectiles
+
 func _ready() -> void:
 	wand = player_root.get_node("Head/CameraSmooth/Camera3D/WandMesh")
 	fire_rate_timer = Timer.new()
@@ -90,7 +93,23 @@ func _schedule_spell(spawn_transform: Transform3D, charge_multiplier: float = 0.
 	var delay := _get_cast_delay()
 	if delay > 0.0:
 		await get_tree().create_timer(delay).timeout
-	_spawn_spell_object(spawn_transform, charge_multiplier)
+
+	var split_count := _get_split_count()
+	for i in range(split_count):
+		# Centre the spread around the aim direction.
+		# Each shot is SPLIT_ANGLE_STEP_DEG apart; the whole fan is centred on 0°.
+		var angle := deg_to_rad(SPLIT_ANGLE_STEP_DEG * (i - (split_count - 1) / 2.0))
+		var rotated := Transform3D(
+			Basis(Vector3.UP, angle) * spawn_transform.basis,
+			spawn_transform.origin
+		)
+		_spawn_spell_object(rotated, charge_multiplier)
+
+func _get_split_count() -> int:
+	for component in our_spell_array:
+		if component["type"] == "mod_int" and component["value"] == SpellGlobals.SpellModifierInt.Split:
+			return maxi(1, component.get("amount", 1))
+	return 1
 
 func _get_cast_delay() -> float:
 	for component in our_spell_array:

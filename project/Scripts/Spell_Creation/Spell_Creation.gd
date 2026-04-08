@@ -2,7 +2,6 @@ extends Control
 
 var simpleGraphNode = load("res://Scripts/Spell_Creation/Scenes/graph_node.tscn")
 var startGraphNode = load("res://Scripts/Spell_Creation/Scenes/start_node.tscn")
-var initial_position = Vector2(40,40)
 var nodeCount = 0
 @onready var nodeCountText = $HBoxContainer/Label
 @export var player_root: Node3D
@@ -56,11 +55,20 @@ func _update_highlights() -> void:
 			to_node.highlight_port(conn["to_port"], true)
 
 func _on_button_pressed() -> void:
-	var node = simpleGraphNode.instantiate();
-	node.position_offset += initial_position + (nodeCount * Vector2(20,20))
+	var node = simpleGraphNode.instantiate()
+	# Place new node just to the right of the rightmost existing node
+	var rightmost_x := 50.0
+	var spawn_y := 200.0
+	for child in $GraphEdit.get_children():
+		if child is GraphNode:
+			var right_edge : float = child.position_offset.x + child.size.x
+			if right_edge > rightmost_x:
+				rightmost_x = right_edge
+				spawn_y = child.position_offset.y
+	node.position_offset = Vector2(rightmost_x + 30.0, spawn_y)
 	node.title += str(nodeCount)
 	node.name = node.title
-	$GraphEdit.add_child(node);
+	$GraphEdit.add_child(node)
 	nodeCount += 1
 	updateNodeCount()
 	node.delete_request.connect(_on_node_delete_request.bind(node))
