@@ -2,17 +2,17 @@ extends Node
 
 var player_root
 var duration: float = 5.0
-const LEVITATION_WEIGHT: float = 500.0
-
-var _original_weight: float
+const LIFT_SPEED: float = 3.0  # m/s upward
 
 func _ready() -> void:
-	_original_weight = player_root.Gravity.Weight
-	player_root.Gravity.Weight = LEVITATION_WEIGHT
 	if duration > 0:
 		await get_tree().create_timer(duration).timeout
 		remove_effect()
 		queue_free()
 
+func _physics_process(_delta: float) -> void:
+	if not player_root: return
+	player_root.velocity = Vector3(player_root.velocity.x, LIFT_SPEED, player_root.velocity.z)
+
 func remove_effect() -> void:
-	player_root.Gravity.Weight = _original_weight
+	pass

@@ -9,13 +9,15 @@ var current_casting_type: int = -1 # We will cache this when equipped!
 # Continuous variables
 var fire_rate_timer: Timer
 
-# Charge variables
-var is_charging: bool = false
-var charge_start_time: float = 0.0
+# ChargeUp variables
+const DEFAULT_CHARGE_DURATION: float = 1.5
+var _is_charging: bool = false
+var _charge_cancelled: bool = false
 
-# SelfInstant / SelfToggle
+# SelfInstant / SelfToggle / SelfHold
 const DEFAULT_EFFECT_DURATION: float = 5.0
 var active_toggle_effects: Dictionary = {}  # { SpellEffect value: Node }
+var _active_hold_effects: Dictionary = {}   # { SpellEffect value: Node }
 
 # Delayed modifier
 const DEFAULT_CAST_DELAY: float = 2.0
@@ -60,15 +62,25 @@ func _on_spell_cast():
 			fire_rate_timer.start()
 
 		SpellGlobals.SpellCasting.ChargeUp:
-			is_charging = true
-			charge_start_time = Time.get_ticks_msec()
-			print("Charging spell...")
+			if not _is_charging:
+				_begin_charge()
 
 		SpellGlobals.SpellCasting.SelfInstant:
 			_apply_self_effects(false)
 
 		SpellGlobals.SpellCasting.SelfToggle:
 			_apply_self_effects(true)
+
+		SpellGlobals.SpellCasting.SelfHold:
+			_apply_hold_effects()
+
+func _begin_charge() -> void:
+	_is_charging = true
+	_charge_cancelled = false
+	await get_tree().create_timer(DEFAULT_CHARGE_DURATION).timeout
+	_is_charging = false
+	if not _charge_cancelled:
+		_spawn_spell_object(wand.get_spell_spawn_transform())
 
 func _schedule_spell(spawn_transform: Transform3D, charge_multiplier: float = 0.0) -> void:
 	var delay := _get_cast_delay()
@@ -113,8 +125,29 @@ func _apply_self_effects(is_toggle: bool) -> void:
 			node.duration = DEFAULT_EFFECT_DURATION
 			player_root.add_child(node)
 
+func _apply_hold_effects() -> void:
+	for component in our_spell_array:
+		if component["type"] != "effect":
+			continue
+		var effect_value: int = component["value"]
+		if not SpellGlobals.EFFECT_SCRIPTS.has(effect_value):
+			continue
+		var node := Node.new()
+		node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
+		node.player_root = player_root
+		node.duration = -1.0
+		player_root.add_child(node)
+		_active_hold_effects[effect_value] = node
+
 func _on_spell_stop() -> void:
+	_charge_cancelled = true
+	_is_charging = false
 	fire_rate_timer.stop()
+	for effect_value in _active_hold_effects:
+		if is_instance_valid(_active_hold_effects[effect_value]):
+			_active_hold_effects[effect_value].remove_effect()
+			_active_hold_effects[effect_value].queue_free()
+	_active_hold_effects.clear()
 
 func _on_fire_rate_timeout() -> void:
 	if wand:

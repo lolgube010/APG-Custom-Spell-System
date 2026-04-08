@@ -15,9 +15,9 @@ enum SpellPath { LineOfSight, CurvePath, SigZagLineOfSight, Upwards, Homing, Boo
 #decides what shape the spell will take
 enum SpellShape { Orb, AOE, Beam, Explode, Cone, Wall, Deployable, GravityProjectile, Trail }
 #decides how the spell is cast
-enum SpellCasting { Burst, Continous, SelfInstant, SelfToggle, ChargeUp }
+enum SpellCasting { Burst, Continous, SelfInstant, SelfToggle, ChargeUp, SelfHold }
 #decides the effect the spell will have when hitting a target
-enum SpellEffect { Scale, MoveSpeed, SlowMo, Levitation, Throw, Poison, Thorns, Invincibilty}
+enum SpellEffect { Scale, MoveSpeed, SlowMo, Levitation, Throw, Poison, Thorns, Invincibilty, Gravity }
 #types of amplifications for nodes
 enum SpellAmplification { Half, Double, Quad, Ten }
 #a trigger for when a spell will spawn another spell
@@ -45,6 +45,7 @@ const EFFECT_SCRIPTS: Dictionary = {
 	SpellEffect.Poison:       preload("res://Scripts/Spell_Stuff/Effects/effect_poison.gd"),
 	SpellEffect.Thorns:       preload("res://Scripts/Spell_Stuff/Effects/effect_thorns.gd"),
 	SpellEffect.Invincibilty: preload("res://Scripts/Spell_Stuff/Effects/effect_invincibility.gd"),
+	SpellEffect.Gravity:      preload("res://Scripts/Spell_Stuff/Effects/effect_gravity.gd"),
 }
 
 var attribute_configs = [

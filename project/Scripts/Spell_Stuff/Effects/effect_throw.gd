@@ -6,7 +6,7 @@ var duration: float = 5.0
 const THROW_FORCE: float = 20.0
 
 func _ready() -> void:
-	player_root.Velocity = Vector3(player_root.Velocity.X, THROW_FORCE, player_root.Velocity.Z)
+	player_root.velocity = Vector3(player_root.velocity.x, THROW_FORCE, player_root.velocity.z)
 	queue_free()
 
 func remove_effect() -> void:
