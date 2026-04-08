@@ -7,7 +7,9 @@ var our_spell_array : Array
 var current_casting_type: int = -1 # We will cache this when equipped!
 
 # Continuous variables
+const BASE_FIRE_RATE: float = 0.2  # seconds between shots at cast_speed 1.0
 var fire_rate_timer: Timer
+var current_cast_speed: float = 1.0
 
 # ChargeUp variables
 const DEFAULT_CHARGE_DURATION: float = 1.5
@@ -24,12 +26,11 @@ const DEFAULT_CAST_DELAY: float = 2.0
 
 func _ready() -> void:
 	wand = player_root.get_node("Head/CameraSmooth/Camera3D/WandMesh")
-	#var trans = wand.get_spell_spawn_transform()
 	fire_rate_timer = Timer.new()
-	fire_rate_timer.wait_time = 0.2 # Shoots 5 times a second
+	fire_rate_timer.wait_time = BASE_FIRE_RATE
 	fire_rate_timer.timeout.connect(_on_fire_rate_timeout)
 	add_child(fire_rate_timer)
-	
+
 	wand.spell_cast.connect(_on_spell_cast)
 	wand.spell_stop.connect(_on_spell_stop)
 
@@ -38,14 +39,17 @@ func _on_spell_creation_spell_data_created(spell_array: Array) -> void:
 		print("spell_casting.gd empty spell array!")
 		return
 	print("spell_casting.gd cached spell creation data!!!")
-	#for result in spell_array:
-		#print(result)
 	our_spell_array = spell_array
-	
+
+	current_cast_speed = 1.0
 	for component in spell_array:
 		if component["type"] == "casting":
 			current_casting_type = component["value"]
-			break
+		elif component["type"] == "mod_float" and component["value"] == SpellGlobals.SpellModifierFloat.CastSpeed:
+			current_cast_speed = maxf(0.1, component.get("amount", 1.0))
+
+	wand.cast_speed = current_cast_speed
+	fire_rate_timer.wait_time = BASE_FIRE_RATE / current_cast_speed
 
 func _on_spell_cast():
 	if our_spell_array.is_empty():
@@ -89,14 +93,9 @@ func _schedule_spell(spawn_transform: Transform3D, charge_multiplier: float = 0.
 	_spawn_spell_object(spawn_transform, charge_multiplier)
 
 func _get_cast_delay() -> float:
-	for i in our_spell_array.size():
-		if our_spell_array[i]["type"] == "casting":
-			var next := i + 1
-			if next < our_spell_array.size():
-				var entry = our_spell_array[next]
-				if entry["type"] == "mod_float" and entry["value"] == SpellGlobals.SpellModifierFloat.Delay:
-					return DEFAULT_CAST_DELAY
-			break
+	for component in our_spell_array:
+		if component["type"] == "mod_float" and component["value"] == SpellGlobals.SpellModifierFloat.Delay:
+			return component.get("amount", DEFAULT_CAST_DELAY)
 	return 0.0
 
 func _apply_self_effects(is_toggle: bool) -> void:
@@ -159,8 +158,41 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 
 	if charge_multiplier > 0.0:
 		new_spell.damage *= (1.0 + charge_multiplier)
-		new_spell.speed *= (1.0 + charge_multiplier * 0.5)
-	
+		new_spell.speed  *= (1.0 + charge_multiplier * 0.5)
+
+	# First pass: apply modifier nodes to SpellBase stats
+	for component in our_spell_array:
+		match component["type"]:
+			"mod_float":
+				var amount: float = component.get("amount", 1.0)
+				match component["value"]:
+					SpellGlobals.SpellModifierFloat.MoveSpeed:
+						new_spell.speed *= amount
+					SpellGlobals.SpellModifierFloat.Duration:
+						new_spell.lifetime *= amount
+					SpellGlobals.SpellModifierFloat.CastForce:
+						pass # reserved
+			"mod_int":
+				var amount: int = component.get("amount", 1)
+				match component["value"]:
+					SpellGlobals.SpellModifierInt.Split:
+						new_spell.split_count = amount
+			"mod_vec":
+				var amt = component.get("amount", {"x": 1.0, "y": 1.0, "z": 1.0})
+				match component["value"]:
+					SpellGlobals.SpellModifierVec.Size:
+						new_spell.scale_mult = Vector3(amt.get("x", 1.0), amt.get("y", 1.0), amt.get("z", 1.0))
+			"mod_bool":
+				var amount: bool = component.get("amount", false)
+				match component["value"]:
+					SpellGlobals.SpellModifierBool.Piercing:
+						new_spell.is_piercing = amount
+					SpellGlobals.SpellModifierBool.Ricochet:
+						new_spell.does_ricochet = amount
+					SpellGlobals.SpellModifierBool.EnvironmentPiercing:
+						new_spell.is_environment_piercing = amount
+
+	# Second pass: attach shape, path, and element components
 	for component in our_spell_array:
 		match component["type"]:
 			"shape":
@@ -173,82 +205,9 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 					new_spell.add_child(path_node)
 			"element":
 				new_spell.element = component["value"]
-					
+
 	get_tree().current_scene.add_child(new_spell)
 	new_spell.global_transform = spawn_transform
-	
+	new_spell.scale = new_spell.scale_mult
+
 	return new_spell
-
-# old ver below
-
-	#if spell_array.is_empty():
-		#return
-		#
-	## 1. Spawn a blank, invisible "container" for our spell
-	#var new_spell = Node3D.new()
-	#new_spell.name = "CustomSpell"
-	#
-	## Optional: Give it a baseline script with basic variables (damage, speed, lifetime)
-	## new_spell.set_script(preload("res://Scripts/Spells/spell_base.gd"))
-	#
-	## 2. Iterate through the instructions and build it!
-	#for component_data in spell_array:
-		#var type = component_data["type"]   # e.g., "shape"
-		#var value = component_data["value"] # e.g., 2 (which means BEAM)
-		#
-		## Route the data to modular handler functions
-		#match type:
-			#"casting":
-				#_apply_casting(new_spell, value)
-			#"shape":
-				#_apply_shape(new_spell, value)
-			#"element":
-				#_apply_element(new_spell, value)
-			#"trigger":
-				#_apply_trigger(new_spell, value)
-			#_:
-				#print("Unrecognized spell component: ", type)
-#
-	## 3. Finally, add the fully constructed spell to the world at the player's location!
-	#new_spell.global_position = player_root.global_position
-	#get_tree().current_scene.add_child(new_spell)
-#
-#func _apply_casting(spell: Node3D, casting_id: int) -> void:
-	#match casting_id:
-		#pass
-		##SpellGlobals.SpellElement.FIRE:
-			### Set damage type, or spawn fire particles
-			##var fire_vfx = preload("res://Assets/VFX/fire_particles.tscn").instantiate()
-			##spell.add_child(fire_vfx)
-			### spell.damage_type = "Fire"
-#
-#func _apply_shape(spell: Node3D, shape_id: int) -> void:
-	#match shape_id:
-		#SpellGlobals.SpellShape.Orb:
-			#pass
-			## Example: Attach an Orb behavior script/node to the spell
-			##var orb_component = preload("res://Scripts/Spells/Components/shape_orb.tscn").instantiate()
-			##spell.add_child(orb_component)
-			#
-		#SpellGlobals.SpellShape.Beam:
-			#pass
-			##var beam_component = preload("res://Scripts/Spells/Components/shape_beam.tscn").instantiate()
-			##spell.add_child(beam_component)
-			#
-		#SpellGlobals.SpellShape.Explode:
-			## Maybe this just tweaks a variable on the spell base
-			#if spell.get("is_explosive") != null:
-				#spell.is_explosive = true
-#
-#func _apply_element(spell: Node3D, element_id: int) -> void:
-	#match element_id:
-		#SpellGlobals.SpellElement.FIRE:
-			#pass
-			## Set damage type, or spawn fire particles
-			##var fire_vfx = preload("res://Assets/VFX/fire_particles.tscn").instantiate()
-			##spell.add_child(fire_vfx)
-			## spell.damage_type = "Fire"
-#
-#func _apply_trigger(spell: Node3D, casting_id: int) -> void:
-	#match casting_id:
-		#pass

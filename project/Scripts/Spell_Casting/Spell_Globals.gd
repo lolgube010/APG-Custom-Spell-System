@@ -56,15 +56,14 @@ const EFFECT_SCRIPTS: Dictionary = {
 }
 
 var attribute_configs = [
-	{"name": "Element", "enum": SpellElement, "color": Color.RED, "id": "element"},
-	{"name": "Modif (Vec)", "enum": SpellModifierVec, "color": Color.CYAN, "id": "mod_vec"},
-	{"name": "Modif (Float)", "enum": SpellModifierFloat, "color": Color.AZURE, "id": "mod_float"},
-	{"name": "Modif (Bool)", "enum": SpellModifierBool, "color": Color.AQUA, "id": "mod_bool"},
-	{"name": "Modif (Int)", "enum": SpellModifierInt, "color": Color.AQUAMARINE, "id": "mod_bool"},
-	{"name": "Path", "enum": SpellPath, "color": Color.YELLOW, "id": "path"},
-	{"name": "Shape", "enum": SpellShape, "color": Color.ORANGE, "id": "shape"},
-	{"name": "Casting", "enum": SpellCasting, "color": Color.GREEN, "id": "casting"},
-	{"name": "Effect", "enum": SpellEffect, "color": Color.PURPLE, "id": "effect"},
-	{"name": "Amplification", "enum": SpellAmplification, "color": Color.PINK, "id": "amplification"},
-	{"name": "Trigger", "enum": SpellTrigger, "color": Color.WHITE, "id": "trigger"}
+	{"name": "Element",       "enum": SpellElement,       "color": Color.RED,        "id": "element",   "input_type": "none"},
+	{"name": "Modif (Vec)",   "enum": SpellModifierVec,   "color": Color.CYAN,       "id": "mod_vec",   "input_type": "vec"},
+	{"name": "Modif (Float)", "enum": SpellModifierFloat, "color": Color.AZURE,      "id": "mod_float", "input_type": "float"},
+	{"name": "Modif (Bool)",  "enum": SpellModifierBool,  "color": Color.AQUA,       "id": "mod_bool",  "input_type": "bool"},
+	{"name": "Modif (Int)",   "enum": SpellModifierInt,   "color": Color.AQUAMARINE, "id": "mod_int",   "input_type": "int"},
+	{"name": "Path",          "enum": SpellPath,          "color": Color.YELLOW,     "id": "path",      "input_type": "none"},
+	{"name": "Shape",         "enum": SpellShape,         "color": Color.ORANGE,     "id": "shape",     "input_type": "none"},
+	{"name": "Casting",       "enum": SpellCasting,       "color": Color.GREEN,      "id": "casting",   "input_type": "none"},
+	{"name": "Effect",        "enum": SpellEffect,        "color": Color.PURPLE,     "id": "effect",    "input_type": "none"},
+	{"name": "Trigger",       "enum": SpellTrigger,       "color": Color.WHITE,      "id": "trigger",   "input_type": "none"},
 ]

@@ -11,6 +11,7 @@ var duration_mult: float = 1.0
 var split_count: int = 0
 var is_piercing: bool = false
 var does_ricochet: bool = false
+var is_environment_piercing: bool = false
 
 var lifetime: float = 5.0
 

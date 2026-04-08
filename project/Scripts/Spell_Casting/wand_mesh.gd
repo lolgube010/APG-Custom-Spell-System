@@ -5,13 +5,15 @@ extends Node
 signal spell_cast()
 signal spell_stop
 
+var cast_speed: float = 1.0
+
 func _unhandled_input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
-				animation_player.play("cast_hold")
+				animation_player.play("cast_hold", -1, cast_speed)
 			if !event.pressed:
-				animation_player.play("cast_release", 0.1)
+				animation_player.play("cast_release", 0.1, cast_speed)
 				spell_stop.emit()
 
 func animation_callback_point():

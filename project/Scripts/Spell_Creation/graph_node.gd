@@ -11,105 +11,169 @@ func _ready() -> void:
 	close_btn.text = "X"
 	close_btn.theme = theme
 	titlebar.add_child(close_btn)
-	
+
 	# --- Dynamically Build Rows, Dropdowns, and Slots ---
 	for i in range(SpellGlobals.attribute_configs.size()):
 		var config = SpellGlobals.attribute_configs[i]
-		
-		# Create a horizontal box so the Label and Dropdown sit nicely side-by-side
+		var input_type: String = config.get("input_type", "none")
+
 		var row: HBoxContainer = HBoxContainer.new()
-		
-		# 1. Add the Label (e.g., "Shape")
+
+		# 1. Label
 		var label: Label = Label.new()
 		label.text = config["name"]
-		label.custom_minimum_size = Vector2(100, 0) # Keeps dropdowns aligned
+		label.custom_minimum_size = Vector2(90, 0)
 		row.add_child(label)
-		
-		# 2. Add the Dropdown (OptionButton)
+
+		# 2. Dropdown
 		var dropdown: OptionButton = OptionButton.new()
-		dropdown.size_flags_horizontal = Control.SIZE_EXPAND_FILL # Stretch to fill space
-		
-		# Populate the dropdown from the enum keys
+		dropdown.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		for element_name in config["enum"].keys():
 			dropdown.add_item(element_name.capitalize())
-		
-		dropdown.item_selected.connect(_on_dropdown_item_selected)
-		
+		dropdown.item_selected.connect(func(_i): setting_changed.emit())
 		row.add_child(dropdown)
-		
-		# 3. Add the entire row to the GraphNode
-		add_child(row)
-		
-		# 4. Enable the slots for this specific row index
-		# We use type '0' for everything so you can connect a Shape to a Trigger as requested
-		set_slot(i, true, 0, config["color"], true, 0, config["color"])
 
-#func _on_element_selected(index: int) -> void:
-	## 'index' matches both the dropdown list position AND the enum integer value!
-	#var chosen_element: SpellGlobals.SpellElement = index as SpellGlobals.SpellElement
-	#
-	#match chosen_element:
-		#SpellGlobals.SpellElement.FIRE:
-			#print("Player chose Fire!")
-			## Maybe change the node's color here?
-		#SpellGlobals.SpellElement.ICE:
-			#print("Player chose Ice!")
-		#SpellGlobals.SpellElement.LIGHTNING:
-			#print("Player chose Lightning!")
-		#SpellGlobals.SpellElement.ARCANE:
-			#print("Player chose Arcane!")
+		# 3. Input widget(s) based on input_type
+		match input_type:
+			"float":
+				var spin := SpinBox.new()
+				spin.min_value = -1000.0
+				spin.max_value = 1000.0
+				spin.step = 0.1
+				spin.value = 1.0
+				spin.custom_minimum_size = Vector2(80, 0)
+				spin.value_changed.connect(func(_v): setting_changed.emit())
+				row.add_child(spin)
+			"int":
+				var spin := SpinBox.new()
+				spin.min_value = -100
+				spin.max_value = 100
+				spin.step = 1
+				spin.rounded = true
+				spin.value = 1
+				spin.custom_minimum_size = Vector2(70, 0)
+				spin.value_changed.connect(func(_v): setting_changed.emit())
+				row.add_child(spin)
+			"bool":
+				var check := CheckBox.new()
+				var state_label := Label.new()
+				state_label.text = "OFF"
+				state_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+				check.toggled.connect(func(pressed: bool):
+					if pressed:
+						state_label.text = "ON"
+						state_label.add_theme_color_override("font_color", Color(0.2, 0.9, 0.2))
+					else:
+						state_label.text = "OFF"
+						state_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+					setting_changed.emit()
+				)
+				row.add_child(check)
+				row.add_child(state_label)
+			"vec":
+				for _axis in 3:
+					var spin := SpinBox.new()
+					spin.min_value = -100.0
+					spin.max_value = 100.0
+					spin.step = 0.1
+					spin.value = 1.0
+					spin.custom_minimum_size = Vector2(60, 0)
+					spin.value_changed.connect(func(_v): setting_changed.emit())
+					row.add_child(spin)
+
+		add_child(row)
+		set_slot(i, true, 0, config["color"], true, 0, config["color"])
 
 func _on_close_button_pressed() -> void:
 	delete_request.emit()
 
 func get_data_for_port(port_index: int) -> Dictionary:
-	var data = {}
-	
-	# Get the specific config dictionary for this row
 	var config = SpellGlobals.attribute_configs[port_index]
-	
-	# The row is a child of the GraphNode. 
-	# Children order: 0 is Titlebar (usually hidden from get_child index), 
-	# but since we added our custom HBoxContainers manually, they align with the port_index!
-	# (Note: +1 is because we added the custom Close Button directly to the titlebar earlier, 
-	# but the rows are added directly to the node body. You may need to tweak this index 
-	# slightly if Godot counts an internal node first).
-	
-	var row = get_child(port_index) 
-	
-	# Inside our row, child 0 is the Label, child 1 is the OptionButton
+	var row = get_child(port_index)
 	var dropdown: OptionButton = row.get_child(1)
-	
-	data["type"] = config["id"]
-	data["value"] = dropdown.get_selected_id()
-	
+
+	var data = {
+		"type": config["id"],
+		"value": dropdown.get_selected_id()
+	}
+
+	match config.get("input_type", "none"):
+		"float":
+			data["amount"] = row.get_child(2).value
+		"int":
+			data["amount"] = int(row.get_child(2).value)
+		"bool":
+			data["amount"] = row.get_child(2).button_pressed
+		"vec":
+			data["amount"] = {
+				"x": row.get_child(2).value,
+				"y": row.get_child(3).value,
+				"z": row.get_child(4).value,
+			}
+
 	return data
 
 func get_dropdown_states() -> Array:
 	var states = []
-	# Iterate safely through children to find the HBoxContainers we built
+	var config_index = 0
 	for child in get_children():
-		if child is HBoxContainer:
-			var dropdown = child.get_child(1) as OptionButton
-			if dropdown:
-				states.append(dropdown.selected)
+		if not child is HBoxContainer:
+			continue
+		var config = SpellGlobals.attribute_configs[config_index]
+		var dropdown = child.get_child(1) as OptionButton
+		var state = {"dropdown": dropdown.selected}
+
+		match config.get("input_type", "none"):
+			"float":
+				state["amount"] = child.get_child(2).value
+			"int":
+				state["amount"] = int(child.get_child(2).value)
+			"bool":
+				state["amount"] = child.get_child(2).button_pressed
+			"vec":
+				state["amount"] = {
+					"x": child.get_child(2).value,
+					"y": child.get_child(3).value,
+					"z": child.get_child(4).value,
+				}
+
+		states.append(state)
+		config_index += 1
 	return states
 
 func set_dropdown_states(states: Array) -> void:
 	var state_index = 0
+	var config_index = 0
 	for child in get_children():
-		if child is HBoxContainer:
-			if state_index < states.size():
-				var dropdown = child.get_child(1) as OptionButton
-				if dropdown:
-					# Apply the saved integer back to the dropdown
-					dropdown.select(states[state_index])
-				state_index += 1
-	setting_changed.emit()
+		if not child is HBoxContainer:
+			continue
+		if state_index >= states.size():
+			break
+		var config = SpellGlobals.attribute_configs[config_index]
+		var state = states[state_index]
+		var dropdown = child.get_child(1) as OptionButton
 
-func _on_dropdown_item_selected(_index: int) -> void:
-	# We don't actually need to know *which* index was selected here.
-	# We just need to shout "Hey, something changed!" so the main script 
-	# knows to re-run the compile_spell() loop.
-	print("node settings changed in graph_node.gd!")
+		# Support old format (plain int) and new format (dict)
+		if state is int:
+			dropdown.select(state)
+		elif state is Dictionary:
+			dropdown.select(state.get("dropdown", 0))
+			match config.get("input_type", "none"):
+				"float":
+					if state.has("amount"):
+						child.get_child(2).value = state["amount"]
+				"int":
+					if state.has("amount"):
+						child.get_child(2).value = state["amount"]
+				"bool":
+					if state.has("amount"):
+						child.get_child(2).button_pressed = state["amount"]
+				"vec":
+					if state.has("amount"):
+						child.get_child(2).value = state["amount"].get("x", 1.0)
+						child.get_child(3).value = state["amount"].get("y", 1.0)
+						child.get_child(4).value = state["amount"].get("z", 1.0)
+
+		state_index += 1
+		config_index += 1
 	setting_changed.emit()

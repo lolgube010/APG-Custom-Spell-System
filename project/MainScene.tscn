@@ -18,10 +18,14 @@ sky = SubResource("Sky_x4av3")
 tonemap_mode = 2
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_x4av3"]
-size = Vector2(10, 10)
+size = Vector2(50, 50)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3mqji"]
 size = Vector3(10.007538, 0.001, 9.983032)
+
+[sub_resource type="BoxMesh" id="BoxMesh_uxrcv"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rf2cd"]
 
 [node name="MainScene" type="Node" unique_id=1552911853]
 
@@ -45,6 +49,15 @@ mesh = SubResource("PlaneMesh_x4av3")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Geo/MeshInstance3D/StaticBody3D" unique_id=1357819976]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0009613037, 0.014293939, 0.0138549805)
 shape = SubResource("BoxShape3D_3mqji")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Geo" unique_id=34268255]
+transform = Transform3D(1, 0, 0, 0, 2.3206472, 0, 0, 0, 4.20294, 7.2905197, 2.5755887, 0)
+mesh = SubResource("BoxMesh_uxrcv")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Geo/MeshInstance3D2" unique_id=1324210513]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geo/MeshInstance3D2/StaticBody3D" unique_id=236141450]
+shape = SubResource("BoxShape3D_rf2cd")
 
 [node name="SpellSystem" type="Node" parent="." unique_id=1445000400]
 script = ExtResource("1_rpqi1")
