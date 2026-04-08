@@ -23,6 +23,19 @@ enum SpellAmplification { Half, Double, Quad, Ten }
 #a trigger for when a spell will spawn another spell
 enum SpellTrigger { OnHit, OnEnd, OnTimer, OnCast, OnKill }
 
+const SHAPE_SCENES: Dictionary = {
+	SpellShape.Orb: preload("res://Scripts/Spell_Stuff/Shape_Orb.tscn"),
+}
+
+const PATH_SCRIPTS: Dictionary = {
+	SpellPath.LineOfSight:       preload("res://Scripts/Spell_Stuff/Paths/path_line_of_sight.gd"),
+	SpellPath.CurvePath:         preload("res://Scripts/Spell_Stuff/Paths/path_curve_path.gd"),
+	SpellPath.SigZagLineOfSight: preload("res://Scripts/Spell_Stuff/Paths/path_zig_zag_line_of_sight.gd"),
+	SpellPath.Upwards:           preload("res://Scripts/Spell_Stuff/Paths/path_upwards.gd"),
+	SpellPath.Homing:            preload("res://Scripts/Spell_Stuff/Paths/path_homing.gd"),
+	SpellPath.Boomerang:         preload("res://Scripts/Spell_Stuff/Paths/path_boomerang.gd"),
+}
+
 var attribute_configs = [
 	{"name": "Element", "enum": SpellElement, "color": Color.RED, "id": "element"},
 	{"name": "Modif (Vec)", "enum": SpellModifierVec, "color": Color.CYAN, "id": "mod_vec"},

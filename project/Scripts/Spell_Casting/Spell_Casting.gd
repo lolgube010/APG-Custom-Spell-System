@@ -2,8 +2,6 @@ extends Node
 
 @export var player_root: Node3D
 var wand : Node
-const OrbComponent = preload("res://Scripts/Spell_Stuff/Shape_Orb.tscn")
-
 # State tracking
 var our_spell_array : Array
 var current_casting_type: int = -1 # We will cache this when equipped!
@@ -118,9 +116,15 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 	for component in our_spell_array:
 		match component["type"]:
 			"shape":
-				if component["value"] == SpellGlobals.SpellShape.Orb:
-					var orb = OrbComponent.instantiate()
-					new_spell.add_child(orb)
+				if SpellGlobals.SHAPE_SCENES.has(component["value"]):
+					new_spell.add_child(SpellGlobals.SHAPE_SCENES[component["value"]].instantiate())
+			"path":
+				if SpellGlobals.PATH_SCRIPTS.has(component["value"]):
+					var path_node = Node.new()
+					path_node.set_script(SpellGlobals.PATH_SCRIPTS[component["value"]])
+					new_spell.add_child(path_node)
+			"element":
+				new_spell.element = component["value"]
 					
 	get_tree().current_scene.add_child(new_spell)
 	new_spell.global_transform = spawn_transform

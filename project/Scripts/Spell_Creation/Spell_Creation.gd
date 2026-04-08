@@ -4,6 +4,7 @@ var simpleGraphNode = load("res://Scripts/Spell_Creation/Scenes/graph_node.tscn"
 var startGraphNode = load("res://Scripts/Spell_Creation/Scenes/start_node.tscn")
 var initial_position = Vector2(40,40)
 var nodeCount = 0
+@onready var nodeCountText = $HBoxContainer/Label
 @export var player_root: Node3D
 signal spell_data_created(spell_array: Array)
 const SAVE_PATH = "res://Scripts/Data/graph_layout_debug.json"
@@ -46,16 +47,16 @@ func _on_button_pressed() -> void:
 	var node = simpleGraphNode.instantiate();
 	node.position_offset += initial_position + (nodeCount * Vector2(20,20))
 	node.title += str(nodeCount)
-	node.name = "SimpleNode_" + str(nodeCount)
+	node.name = node.title
 	$GraphEdit.add_child(node);
 	nodeCount += 1
-	print("Node added! Current count is: ", nodeCount)
+	updateNodeCount()
 	node.delete_request.connect(_on_node_delete_request.bind(node))
 	node.setting_changed.connect(_on_node_settings_changed)
 	
 func _on_node_delete_request(node_to_delete: Node) -> void:
 	nodeCount -= 1
-	print("Node deleted! Current count is: ", nodeCount)
+	updateNodeCount()
 	node_to_delete.queue_free.call_deferred() #todo, maybe move to nodes.
 	broadcast_spell_update()
 
@@ -115,6 +116,7 @@ func _on_graph_edit_delete_nodes_request(nodes: Array[StringName]) -> void:
 		var node_to_delete = $GraphEdit.get_node(NodePath(node_name))
 		if node_to_delete:
 			nodeCount -= 1
+			updateNodeCount()
 			node_to_delete.queue_free()
 	broadcast_spell_update()
 #[
@@ -194,7 +196,7 @@ func save_graph_layout() -> void:
 			
 			if child.has_method("get_dropdown_states"):
 				node_data["dropdown_states"] = child.get_dropdown_states()
-				
+
 			graph_data["nodes"][child.name] = node_data
 			
 	# If we only found the Start Node, abort the save process entirely
@@ -229,7 +231,8 @@ func load_graph_layout():
 		for child in $GraphEdit.get_children():
 			if child is GraphNode and child.name != "StartNode":
 				child.queue_free()
-				
+		
+		nodeCount = 0		
 		await get_tree().process_frame
 		
 		# 2. Restore Nodes
@@ -238,8 +241,10 @@ func load_graph_layout():
 			var pos = Vector2(node_data["x"], node_data["y"])
 			
 			if node_data.get("is_dynamic", false):
+				nodeCount += 1
 				var new_node = simpleGraphNode.instantiate()
 				new_node.name = node_name
+				new_node.title = node_name
 				new_node.position_offset = pos
 				$GraphEdit.add_child(new_node)
 				new_node.delete_request.connect(_on_node_delete_request.bind(new_node))
@@ -253,9 +258,9 @@ func load_graph_layout():
 					await get_tree().process_frame 
 					new_node.set_dropdown_states(states)
 				
-				var num_str = node_name.replace("SimpleNode_", "")
-				if num_str.is_valid_int():
-					nodeCount = maxi(nodeCount, num_str.to_int() + 1)
+				#var num_str = node_name.replace("SimpleNode_", "")
+				#if num_str.is_valid_int():
+					#nodeCount = maxi(nodeCount, num_str.to_int() + 1)
 			else:
 				var start_node = $GraphEdit.get_node_or_null("StartNode")
 				if start_node:
@@ -268,7 +273,11 @@ func load_graph_layout():
 			$GraphEdit.connect_node(conn["from_node"], conn["from_port"], conn["to_node"], conn["to_port"])
 			
 		print("Graph layout loaded successfully.")
+		updateNodeCount()
 	broadcast_spell_update()
+
+func updateNodeCount():
+	nodeCountText.text = "Node Count: " + str(nodeCount)
 
 func clear_saved_graph_layout() -> void:
 	# Check if the file actually exists before trying to delete it
@@ -296,6 +305,7 @@ func clear_saved_graph_layout() -> void:
 		
 	# Reset your counter
 	nodeCount = 0
+	updateNodeCount()
 	broadcast_spell_update()
 
 func _on_node_settings_changed():

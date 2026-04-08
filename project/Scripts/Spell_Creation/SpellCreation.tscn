@@ -42,6 +42,10 @@ text = "Load Nodes"
 layout_mode = 2
 text = "Clear Save"
 
+[node name="Label" type="Label" parent="HBoxContainer" unique_id=1212705603]
+layout_mode = 2
+text = "Node Count: 0"
+
 [connection signal="connection_from_empty" from="GraphEdit" to="." method="_on_graph_edit_connection_from_empty"]
 [connection signal="connection_request" from="GraphEdit" to="." method="_on_graph_edit_connection_request"]
 [connection signal="connection_to_empty" from="GraphEdit" to="." method="_on_graph_edit_connection_to_empty"]
