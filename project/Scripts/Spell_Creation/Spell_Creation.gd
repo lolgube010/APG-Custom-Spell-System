@@ -170,7 +170,15 @@ func compile_spell() -> Array:
 			# No outgoing wires from the current node. The chain is finished!
 			current_node_name = "" 
 			
-	return spell_sequence
+	return _split_at_triggers(spell_sequence)
+
+func _split_at_triggers(array: Array) -> Array:
+	for i in range(array.size()):
+		if array[i]["type"] == "trigger":
+			var child := array.slice(i + 1)
+			array[i]["child_spell"] = _split_at_triggers(child)
+			return array.slice(0, i + 1)
+	return array
 
 func _get_outgoing_connection(node_name: StringName, connections: Array) -> Dictionary:
 	for conn in connections:

@@ -14,9 +14,20 @@ var is_environment_piercing: bool = false
 
 var lifetime: float = 5.0
 
+# Trigger / child spell
+var trigger_type: int = -1         # SpellTrigger enum value, -1 = no trigger
+var child_spell_array: Array = []  # compiled sub-array to spawn when trigger fires
+var spawn_child: Callable          # set by Spell_Casting: call(child_array, transform)
+
 # Arrays to hold effects that haven't been applied to a shape yet
 var pending_effects: Array[int] = []
 
 func _ready() -> void:
 	await get_tree().create_timer(lifetime).timeout
+	fire_trigger(SpellGlobals.SpellTrigger.OnEnd, global_transform)
 	queue_free()
+
+func fire_trigger(type: int, xform: Transform3D) -> void:
+	if type != trigger_type or child_spell_array.is_empty() or not spawn_child.is_valid():
+		return
+	spawn_child.call(child_spell_array, xform)

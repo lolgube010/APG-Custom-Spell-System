@@ -29,7 +29,7 @@ func _on_body_entered(body: Node3D) -> void:
 	if is_environment and parent_spell.is_environment_piercing:
 		return  # pass through walls
 
-	# TODO: apply OnHit triggers before destroying
+	parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
 	parent_spell.queue_free()
 
 func _do_ricochet() -> void:

@@ -254,7 +254,10 @@ func _on_fire_rate_timeout() -> void:
 	if wand:
 		_schedule_spell(wand.get_spell_spawn_transform())
 
-func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float = 0.0) -> Node3D:
+func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float = 0.0, spell_array: Array = []) -> Node3D:
+	if spell_array.is_empty():
+		spell_array = our_spell_array
+
 	var new_spell = SpellBase.new()
 	new_spell.name = "ActiveSpell"
 
@@ -263,7 +266,7 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 		new_spell.speed  *= (1.0 + charge_multiplier * 0.5)
 
 	# First pass: apply modifier nodes to SpellBase stats
-	for component in our_spell_array:
+	for component in spell_array:
 		match component["type"]:
 			"mod_float":
 				var amount: float = component.get("amount", 1.0)
@@ -294,8 +297,8 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 					SpellGlobals.SpellModifierBool.EnvironmentPiercing:
 						new_spell.is_environment_piercing = amount
 
-	# Second pass: attach shape, path, and element components
-	for component in our_spell_array:
+	# Second pass: attach shape, path, element, and trigger components
+	for component in spell_array:
 		match component["type"]:
 			"shape":
 				if SpellGlobals.SHAPE_SCENES.has(component["value"]):
@@ -307,6 +310,11 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 					new_spell.add_child(path_node)
 			"element":
 				new_spell.element = component["value"]
+			"trigger":
+				new_spell.trigger_type = component["value"]
+				new_spell.child_spell_array = component.get("child_spell", [])
+				new_spell.spawn_child = func(child_arr: Array, xform: Transform3D):
+					_spawn_spell_object(xform, 0.0, child_arr)
 
 	get_tree().current_scene.add_child(new_spell)
 	new_spell.global_transform = spawn_transform
