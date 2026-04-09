@@ -17,7 +17,7 @@ enum SpellShape { Orb, AOE, Beam, Explode, Cone, Wall, GravityProjectile, Projec
 #decides how the spell is cast
 enum SpellCasting { Burst, Continous, SelfInstant, SelfToggle, ChargeUp, SelfHold }
 #decides the effect the spell will have when hitting a target
-enum SpellEffect { Scale, MoveSpeed, SlowMo, Levitation, ThrowLook, Poison, Thorns, Invincibilty, Gravity, ThrowRandom }
+enum SpellEffect { Scale, MoveSpeed, SlowMo, Levitation, ThrowLook, Poison, Thorns, Invincibilty, Gravity, ThrowRandom, RandomTeleport, TeleportToHit }
 #types of amplifications for nodes
 enum SpellAmplification { Half, Double, Quad, Ten }
 #a trigger for when a spell will spawn another spell
@@ -81,6 +81,8 @@ const EFFECT_INPUT_TYPES: Dictionary = {
 	7: {"type": "none",  "default": 0.0},
 	8: {"type": "float", "default": 500.0},
 	9: {"type": "float", "default": 20.0},
+	10: {"type": "float", "default": 10.0},  # RandomTeleport — radius in metres
+	11: {"type": "none",  "default": 0.0},   # TeleportToHit — position comes from hit transform
 }
 
 const TRIGGER_INPUT_TYPES: Dictionary = {
@@ -100,7 +102,9 @@ const EFFECT_SCRIPTS: Dictionary = {
 	SpellEffect.Thorns:       preload("res://Scripts/Spell_Stuff/Effects/effect_thorns.gd"),
 	SpellEffect.Invincibilty: preload("res://Scripts/Spell_Stuff/Effects/effect_invincibility.gd"),
 	SpellEffect.Gravity:      preload("res://Scripts/Spell_Stuff/Effects/effect_gravity.gd"),
-	SpellEffect.ThrowRandom:  preload("res://Scripts/Spell_Stuff/Effects/effect_throw_random.gd"),
+	SpellEffect.ThrowRandom:      preload("res://Scripts/Spell_Stuff/Effects/effect_throw_random.gd"),
+	SpellEffect.RandomTeleport:   preload("res://Scripts/Spell_Stuff/Effects/effect_random_teleport.gd"),
+	SpellEffect.TeleportToHit:    preload("res://Scripts/Spell_Stuff/Effects/effect_teleport_to_hit.gd"),
 }
 
 var attribute_configs = [

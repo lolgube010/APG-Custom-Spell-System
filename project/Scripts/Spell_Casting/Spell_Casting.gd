@@ -300,17 +300,7 @@ func _fire_shape_for_self_cast() -> void:
 ## Applies self-cast effects found in a child spell array.
 ## All self-cast types (SelfInstant / SelfToggle / SelfHold) are treated as
 ## one-shot with DEFAULT_EFFECT_DURATION — there's no LMB hold context here.
-func _apply_child_spell_effects(arr: Array) -> void:
-	var has_self_cast := false
-	for component in arr:
-		if component["type"] == "casting":
-			var cv := int(component["value"])
-			has_self_cast = cv == SpellGlobals.SpellCasting.SelfInstant \
-						 or cv == SpellGlobals.SpellCasting.SelfToggle \
-						 or cv == SpellGlobals.SpellCasting.SelfHold
-			break
-	if not has_self_cast:
-		return
+func _apply_child_spell_effects(arr: Array, hit_transform: Transform3D = Transform3D.IDENTITY) -> void:
 	for component in arr:
 		if component["type"] != "effect":
 			continue
@@ -322,6 +312,9 @@ func _apply_child_spell_effects(arr: Array) -> void:
 		node.player_root = player_root
 		node.duration = DEFAULT_EFFECT_DURATION
 		_apply_effect_amount(node, component)
+		# Pass the hit position to effects that use it (e.g. TeleportToHit).
+		# set() silently no-ops for effects that don't declare hit_position.
+		node.set("hit_position", hit_transform.origin)
 		player_root.add_child(node)
 
 func _flatten_spell_refs(arr: Array) -> Array:
@@ -412,10 +405,9 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 				if int(component["value"]) == SpellGlobals.SpellTrigger.OnTimer:
 					new_spell.timer_trigger_interval = maxf(0.1, component.get("amount", 1.0))
 
-	# If this is a child spell (fired by a trigger), apply any self-cast effects
-	# it contains. Top-level spells handle this in _on_spell_cast instead.
 	if is_child_spell:
-		_apply_child_spell_effects(spell_array)
+		# Child spell (fired by a trigger): apply all effects immediately at the hit point.
+		_apply_child_spell_effects(spell_array, spawn_transform)
 
 	# Don't add an invisible ghost container if no shape was attached
 	if not has_shape:

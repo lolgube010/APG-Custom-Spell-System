@@ -2,51 +2,58 @@
 	"connections": [
 		{
 			"from_node": "StartNode",
-			"from_port": 0.0,
+			"from_port": 0,
 			"keep_alive": false,
-			"to_node": "SpellRef_0",
-			"to_port": 0.0
+			"to_node": "Node_0",
+			"to_port": 4
 		},
 		{
-			"from_node": "SpellRef_0",
-			"from_port": 0.0,
+			"from_node": "Node_0",
+			"from_port": 4,
 			"keep_alive": false,
-			"to_node": "Simple Node 1",
-			"to_port": 6.0
+			"to_node": "Node_1",
+			"to_port": 3
 		},
 		{
-			"from_node": "Simple Node 1",
-			"from_port": 6.0,
+			"from_node": "Node_1",
+			"from_port": 3,
 			"keep_alive": false,
-			"to_node": "Simple Node 2",
-			"to_port": 4.0
+			"to_node": "Node_2",
+			"to_port": 2
 		},
 		{
-			"from_node": "Simple Node 2",
-			"from_port": 4.0,
+			"from_node": "Node_2",
+			"from_port": 2,
+			"keep_alive": false,
+			"to_node": "Simple Node 4",
+			"to_port": 6
+		},
+		{
+			"from_node": "Simple Node 4",
+			"from_port": 6,
 			"keep_alive": false,
 			"to_node": "Simple Node 3",
-			"to_port": 3.0
+			"to_port": 5
 		}
 	],
 	"nodes": {
-		"Simple Node 1": {
+		"Node_0": {
 			"dropdown_states": [
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
 					"amount": 1.0,
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
 					"amount": {
@@ -54,34 +61,34 @@
 						"y": 2.0,
 						"z": 2.0
 					},
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				}
 			],
 			"is_dynamic": true,
 			"node_type": "simple",
-			"x": 531.0,
+			"x": 300.0,
 			"y": 200.0
 		},
-		"Simple Node 2": {
+		"Node_1": {
 			"dropdown_states": [
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
 					"amount": 1.0,
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
 					"amount": {
@@ -89,34 +96,99 @@
 						"y": 2.0,
 						"z": 2.0
 					},
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				}
 			],
 			"is_dynamic": true,
 			"node_type": "simple",
-			"x": 1111.0,
+			"x": 896.0,
+			"y": 200.0
+		},
+		"Node_2": {
+			"dropdown_states": [
+				{
+					"dropdown": 0
+				},
+				{
+					"amount": 1.0,
+					"dropdown": 0
+				},
+				{
+					"dropdown": 0
+				},
+				{
+					"dropdown": 0
+				},
+				{
+					"dropdown": 0
+				},
+				{
+					"amount": {
+						"x": 2.0,
+						"y": 2.0,
+						"z": 2.0
+					},
+					"dropdown": 0
+				},
+				{
+					"dropdown": 0
+				}
+			],
+			"is_dynamic": true,
+			"node_type": "simple",
+			"x": 1492.0,
 			"y": 200.0
 		},
 		"Simple Node 3": {
 			"dropdown_states": [
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
 					"amount": 1.0,
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
-					"dropdown": 3.0
+					"dropdown": 0
 				},
 				{
-					"dropdown": 0.0
+					"dropdown": 0
+				},
+				{
+					"dropdown": 11
+				},
+				{
+					"dropdown": 0
+				}
+			],
+			"is_dynamic": true,
+			"node_type": "simple",
+			"x": 2740.0,
+			"y": 200.0
+		},
+		"Simple Node 4": {
+			"dropdown_states": [
+				{
+					"dropdown": 0
+				},
+				{
+					"amount": 1.0,
+					"dropdown": 0
+				},
+				{
+					"dropdown": 0
+				},
+				{
+					"dropdown": 0
+				},
+				{
+					"dropdown": 0
 				},
 				{
 					"amount": {
@@ -124,24 +196,15 @@
 						"y": 2.0,
 						"z": 2.0
 					},
-					"dropdown": 0.0
+					"dropdown": 0
 				},
 				{
-					"dropdown": 0.0
+					"dropdown": 0
 				}
 			],
 			"is_dynamic": true,
 			"node_type": "simple",
-			"x": 1691.0,
-			"y": 200.0
-		},
-		"SpellRef_0": {
-			"dropdown_states": [
-				"Beam Levitation"
-			],
-			"is_dynamic": true,
-			"node_type": "spell_ref",
-			"x": 243.0,
+			"x": 2120.0,
 			"y": 200.0
 		},
 		"StartNode": {
@@ -169,6 +232,20 @@
 			{
 				"type": "shape",
 				"value": 2.0
+			},
+			{
+				"type": "path",
+				"value": 0.0
+			}
+		],
+		"Fireball": [
+			{
+				"type": "casting",
+				"value": 0.0
+			},
+			{
+				"type": "shape",
+				"value": 0.0
 			},
 			{
 				"type": "path",
