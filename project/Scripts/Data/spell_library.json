@@ -1,0 +1,16 @@
+{
+	"Fireball": [
+		{
+			"type": "casting",
+			"value": 0
+		},
+		{
+			"type": "shape",
+			"value": 0
+		},
+		{
+			"type": "path",
+			"value": 0
+		}
+	]
+}

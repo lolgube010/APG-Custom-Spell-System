@@ -1,22 +1,40 @@
 extends Control
 
 var simpleGraphNode = load("res://Scripts/Spell_Creation/Scenes/graph_node.tscn")
-var startGraphNode = load("res://Scripts/Spell_Creation/Scenes/start_node.tscn")
+var startGraphNode  = load("res://Scripts/Spell_Creation/Scenes/start_node.tscn")
+var spellRefNode    = load("res://Scripts/Spell_Creation/Scenes/spell_ref_node.tscn")
 var nodeCount = 0
 @onready var nodeCountText = $HBoxContainer/Label
 @export var player_root: Node3D
 signal spell_data_created(spell_array: Array)
 const SAVE_PATH = "res://Scripts/Data/graph_layout_debug.json"
 
+var _library_list: VBoxContainer
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	# Spawn the Start Node immediately
 	var start_node = startGraphNode.instantiate()
-	# Hardcode its name so we can easily find it later
-	start_node.name = "StartNode" 
-	# Position it nicely on the left side of the screen
-	start_node.position_offset = Vector2(50, 200) 
+	start_node.name = "StartNode"
+	start_node.position_offset = Vector2(50, 200)
 	$GraphEdit.add_child(start_node)
+
+	# Add Spell Ref button
+	var btn_ref := Button.new()
+	btn_ref.text = "Add Spell Ref"
+	btn_ref.pressed.connect(_on_add_spell_ref_pressed)
+	$HBoxContainer.add_child(btn_ref)
+	$HBoxContainer.move_child(btn_ref, nodeCountText.get_index())
+
+	# Save to Library button
+	var btn_lib := Button.new()
+	btn_lib.text = "Save to Library"
+	btn_lib.pressed.connect(_on_save_to_library_pressed)
+	$HBoxContainer.add_child(btn_lib)
+	$HBoxContainer.move_child(btn_lib, nodeCountText.get_index())
+
+	# Build the library panel (top-right corner)
+	_build_library_panel()
 	
 	#var spell_node = find_node_with_signal(player_root)
 	#if spell_node:
@@ -32,6 +50,181 @@ func _ready() -> void:
 		#var found = find_node_with_signal(child)
 		#if found: return found
 	#return null
+
+# ---------------------------------------------------------------------------
+# Spell Library UI
+# ---------------------------------------------------------------------------
+
+func _build_library_panel() -> void:
+	var panel := Panel.new()
+	panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	panel.offset_left   = -220
+	panel.offset_top    = 40
+	panel.offset_right  = 0
+	panel.offset_bottom = 320
+	add_child(panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.add_theme_constant_override("separation", 4)
+	panel.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "Spell Library"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_library_list = VBoxContainer.new()
+	scroll.add_child(_library_list)
+	vbox.add_child(scroll)
+
+	SpellLibrary.library_changed.connect(_refresh_library_panel)
+	_refresh_library_panel()
+
+func _refresh_library_panel() -> void:
+	for child in _library_list.get_children():
+		child.queue_free()
+	for spell_name in SpellLibrary.get_all_names():
+		var row := HBoxContainer.new()
+		var captured: String = spell_name
+		var name_field := LineEdit.new()
+		name_field.text = spell_name
+		name_field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_field.text_submitted.connect(func(new_name: String): SpellLibrary.rename_spell(captured, new_name.strip_edges()))
+		name_field.focus_exited.connect(func(): SpellLibrary.rename_spell(captured, name_field.text.strip_edges()))
+		var load_btn := Button.new()
+		load_btn.text = "Load"
+		load_btn.custom_minimum_size = Vector2(40, 0)
+		load_btn.pressed.connect(func(): _load_spell_to_graph(SpellLibrary.get_spell(captured)))
+		var del_btn := Button.new()
+		del_btn.text = "X"
+		del_btn.custom_minimum_size = Vector2(28, 0)
+		del_btn.pressed.connect(func(): SpellLibrary.delete_spell(captured))
+		row.add_child(name_field)
+		row.add_child(load_btn)
+		row.add_child(del_btn)
+		_library_list.add_child(row)
+
+func _load_spell_to_graph(array: Array) -> void:
+	# Clear existing dynamic nodes and connections
+	for child in $GraphEdit.get_children():
+		if child is GraphNode and child.name != "StartNode":
+			child.queue_free()
+	$GraphEdit.clear_connections()
+	nodeCount = 0
+	updateNodeCount()
+	await get_tree().process_frame
+
+	# Flatten triggers back into a linear sequence (inverse of _split_at_triggers)
+	var flat := _flatten_spell_array(array)
+
+	var prev_name: StringName = "StartNode"
+	var prev_out_port := 0  # StartNode only has output port 0
+	var x := 300.0
+
+	for entry in flat:
+		var node: GraphNode
+		var port := _type_to_port(entry["type"])
+
+		if entry["type"] == "spell_ref":
+			node = spellRefNode.instantiate()
+			node.name = "SpellRef_%d" % nodeCount
+			node.position_offset = Vector2(x, 200)
+			$GraphEdit.add_child(node)
+			node.delete_request.connect(_on_node_delete_request.bind(node))
+			node.setting_changed.connect(_on_node_settings_changed)
+			await get_tree().process_frame
+			node.set_dropdown_states([entry.get("name", "")])
+		else:
+			node = simpleGraphNode.instantiate()
+			node.name = "Node_%d" % nodeCount
+			node.title = node.name
+			node.position_offset = Vector2(x, 200)
+			$GraphEdit.add_child(node)
+			node.delete_request.connect(_on_node_delete_request.bind(node))
+			node.setting_changed.connect(_on_node_settings_changed)
+			await get_tree().process_frame
+			# Build the 7-row states array; all rows default to index 0
+			var states := []
+			for i in SpellGlobals.attribute_configs.size():
+				states.append({"dropdown": 0} if i != port else _entry_to_row_state(entry))
+			node.set_dropdown_states(states)
+
+		$GraphEdit.connect_node(prev_name, prev_out_port, node.name, port)
+		prev_name = node.name
+		prev_out_port = port
+		nodeCount += 1
+		x += 220.0
+
+	updateNodeCount()
+	broadcast_spell_update()
+
+# Reverse _split_at_triggers: expand trigger child_spells back into a flat sequence.
+func _flatten_spell_array(array: Array) -> Array:
+	var result: Array = []
+	for entry in array:
+		result.append(entry)
+		if entry["type"] == "trigger" and entry.has("child_spell"):
+			result.append_array(_flatten_spell_array(entry["child_spell"]))
+	return result
+
+# Maps a spell entry type to its attribute_configs row index (= GraphNode slot index).
+func _type_to_port(type: String) -> int:
+	match type:
+		"element":                               return 0
+		"mod_float", "mod_vec", "mod_bool", "mod_int": return 1
+		"path":                                  return 2
+		"shape":                                 return 3
+		"casting":                               return 4
+		"effect":                                return 5
+		"trigger":                               return 6
+	return 0
+
+# Converts a spell array entry into the row-state dict that set_dropdown_states expects.
+func _entry_to_row_state(entry: Dictionary) -> Dictionary:
+	var state := {"dropdown": 0}
+	match entry["type"]:
+		"element", "path", "shape", "casting", "effect", "trigger":
+			state["dropdown"] = entry.get("value", 0)
+		"mod_float", "mod_vec", "mod_bool", "mod_int":
+			# Find the matching MODIFIER_ITEMS index
+			for i in SpellGlobals.MODIFIER_ITEMS.size():
+				var item = SpellGlobals.MODIFIER_ITEMS[i]
+				if item["spell_type"] == entry["type"] and item["spell_value"] == entry.get("value", 0):
+					state["dropdown"] = i
+					break
+	if entry.has("amount"):
+		state["amount"] = entry["amount"]
+	return state
+
+func _on_add_spell_ref_pressed() -> void:
+	var node = spellRefNode.instantiate()
+	var rightmost_x := 50.0
+	var spawn_y := 200.0
+	for child in $GraphEdit.get_children():
+		if child is GraphNode:
+			var right_edge : float = child.position_offset.x + child.size.x
+			if right_edge > rightmost_x:
+				rightmost_x = right_edge
+				spawn_y = child.position_offset.y
+	node.position_offset = Vector2(rightmost_x + 30.0, spawn_y)
+	node.name = "SpellRef_%d" % nodeCount
+	$GraphEdit.add_child(node)
+	nodeCount += 1
+	updateNodeCount()
+	node.delete_request.connect(_on_node_delete_request.bind(node))
+	node.setting_changed.connect(_on_node_settings_changed)
+
+func _on_save_to_library_pressed() -> void:
+	var compiled := compile_spell()
+	if compiled.is_empty():
+		return
+	var saved_name := SpellLibrary.save_spell(compiled)
+	print("Saved spell to library as: ", saved_name)
+
+# ---------------------------------------------------------------------------
 
 func broadcast_spell_update() -> void:
 	# CRITICAL: We wait one frame before compiling.
@@ -160,9 +353,15 @@ func compile_spell() -> Array:
 			
 			var target_node = $GraphEdit.get_node(NodePath(target_node_name))
 			
-			# Ask the target node for its data based on the port the wire entered
-			var component_data = target_node.get_data_for_port(target_port)
-			spell_sequence.append(component_data)
+			# Ask the target node for its data based on the port the wire entered.
+			# SpellRefNodes emit a spell_ref marker instead of a regular component.
+			if target_node.has_method("get_selected_spell_name"):
+				var ref_name = target_node.get_selected_spell_name()
+				if ref_name != "":
+					spell_sequence.append({"type": "spell_ref", "name": ref_name})
+			else:
+				var component_data = target_node.get_data_for_port(target_port)
+				spell_sequence.append(component_data)
 			
 			# Move our "current" pointer to this target node for the next loop iteration
 			current_node_name = target_node_name
@@ -214,7 +413,8 @@ func save_graph_layout() -> void:
 			var node_data = {
 				"x": child.position_offset.x,
 				"y": child.position_offset.y,
-				"is_dynamic": is_dynamic
+				"is_dynamic": is_dynamic,
+				"node_type": "spell_ref" if child.has_method("get_selected_spell_name") else "simple"
 			}
 			
 			if child.has_method("get_dropdown_states"):
@@ -228,7 +428,8 @@ func save_graph_layout() -> void:
 		return
 		
 	graph_data["connections"] = $GraphEdit.get_connection_list()
-	
+	graph_data["spell_library"] = SpellLibrary.get_library_dict()
+
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(graph_data, "\t"))
@@ -248,6 +449,8 @@ func load_graph_layout():
 	
 	if error == OK:
 		var graph_data = json.data
+		if graph_data.has("spell_library"):
+			SpellLibrary.load_library_dict(graph_data["spell_library"])
 		var saved_nodes = graph_data.get("nodes", {})
 		
 		# 1. Clear out existing dynamic nodes
@@ -265,7 +468,7 @@ func load_graph_layout():
 			
 			if node_data.get("is_dynamic", false):
 				nodeCount += 1
-				var new_node = simpleGraphNode.instantiate()
+				var new_node = spellRefNode.instantiate() if node_data.get("node_type", "simple") == "spell_ref" else simpleGraphNode.instantiate()
 				new_node.name = node_name
 				new_node.title = node_name
 				new_node.position_offset = pos

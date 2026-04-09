@@ -4,94 +4,18 @@
 			"from_node": "StartNode",
 			"from_port": 0,
 			"keep_alive": false,
-			"to_node": "Simple Node 0",
-			"to_port": 4
+			"to_node": "SpellRef_0",
+			"to_port": 0
 		},
 		{
-			"from_node": "Simple Node 0",
-			"from_port": 4,
+			"from_node": "SpellRef_0",
+			"from_port": 0,
 			"keep_alive": false,
 			"to_node": "Simple Node 1",
-			"to_port": 3
-		},
-		{
-			"from_node": "Simple Node 1",
-			"from_port": 3,
-			"keep_alive": false,
-			"to_node": "Simple Node 2",
-			"to_port": 2
-		},
-		{
-			"from_node": "Simple Node 2",
-			"from_port": 2,
-			"keep_alive": false,
-			"to_node": "Simple Node 3",
 			"to_port": 6
-		},
-		{
-			"from_node": "Simple Node 3",
-			"from_port": 6,
-			"keep_alive": false,
-			"to_node": "Simple Node 4",
-			"to_port": 4
-		},
-		{
-			"from_node": "Simple Node 4",
-			"from_port": 4,
-			"keep_alive": false,
-			"to_node": "Simple Node 5",
-			"to_port": 3
-		},
-		{
-			"from_node": "Simple Node 5",
-			"from_port": 3,
-			"keep_alive": false,
-			"to_node": "Simple Node 6",
-			"to_port": 2
-		},
-		{
-			"from_node": "Simple Node 6",
-			"from_port": 2,
-			"keep_alive": false,
-			"to_node": "Simple Node 7",
-			"to_port": 0
 		}
 	],
 	"nodes": {
-		"Simple Node 0": {
-			"dropdown_states": [
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": 1.0,
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": {
-						"x": 2.0,
-						"y": 2.0,
-						"z": 2.0
-					},
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				}
-			],
-			"is_dynamic": true,
-			"x": 243.0,
-			"y": 200.0
-		},
 		"Simple Node 1": {
 			"dropdown_states": [
 				{
@@ -123,217 +47,40 @@
 				}
 			],
 			"is_dynamic": true,
-			"x": 823.0,
-			"y": 200.0
+			"node_type": "simple",
+			"x": 540.0,
+			"y": 60.0
 		},
-		"Simple Node 2": {
+		"SpellRef_0": {
 			"dropdown_states": [
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": 1.0,
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": {
-						"x": 2.0,
-						"y": 2.0,
-						"z": 2.0
-					},
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				}
+				"Fireball"
 			],
 			"is_dynamic": true,
-			"x": 1403.0,
-			"y": 200.0
-		},
-		"Simple Node 3": {
-			"dropdown_states": [
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": 1.0,
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": {
-						"x": 2.0,
-						"y": 2.0,
-						"z": 2.0
-					},
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				}
-			],
-			"is_dynamic": true,
-			"x": 1983.0,
-			"y": 200.0
-		},
-		"Simple Node 4": {
-			"dropdown_states": [
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": 1.0,
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": {
-						"x": 2.0,
-						"y": 2.0,
-						"z": 2.0
-					},
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				}
-			],
-			"is_dynamic": true,
-			"x": 2563.0,
-			"y": 200.0
-		},
-		"Simple Node 5": {
-			"dropdown_states": [
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": 1.0,
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": {
-						"x": 2.0,
-						"y": 2.0,
-						"z": 2.0
-					},
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				}
-			],
-			"is_dynamic": true,
-			"x": 3143.0,
-			"y": 200.0
-		},
-		"Simple Node 6": {
-			"dropdown_states": [
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": 1.0,
-					"dropdown": 0
-				},
-				{
-					"dropdown": 3
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": {
-						"x": 2.0,
-						"y": 2.0,
-						"z": 2.0
-					},
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				}
-			],
-			"is_dynamic": true,
-			"x": 3723.0,
-			"y": 200.0
-		},
-		"Simple Node 7": {
-			"dropdown_states": [
-				{
-					"dropdown": 1
-				},
-				{
-					"amount": 1.0,
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": {
-						"x": 2.0,
-						"y": 2.0,
-						"z": 2.0
-					},
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				}
-			],
-			"is_dynamic": true,
-			"x": 4303.0,
+			"node_type": "spell_ref",
+			"x": 243.0,
 			"y": 200.0
 		},
 		"StartNode": {
 			"is_dynamic": false,
+			"node_type": "simple",
 			"x": 50.0,
 			"y": 200.0
 		}
+	},
+	"spell_library": {
+		"Fireball": [
+			{
+				"type": "casting",
+				"value": 0
+			},
+			{
+				"type": "shape",
+				"value": 0
+			},
+			{
+				"type": "path",
+				"value": 0
+			}
+		]
 	}
 }

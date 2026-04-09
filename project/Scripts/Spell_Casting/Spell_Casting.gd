@@ -297,12 +297,14 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 					SpellGlobals.SpellModifierBool.EnvironmentPiercing:
 						new_spell.is_environment_piercing = amount
 
-	# Second pass: attach shape, path, element, and trigger components
+	# Second pass: attach shape, path, element, trigger, and spell_ref components
+	var has_shape := false
 	for component in spell_array:
 		match component["type"]:
 			"shape":
 				if SpellGlobals.SHAPE_SCENES.has(component["value"]):
 					new_spell.add_child(SpellGlobals.SHAPE_SCENES[component["value"]].instantiate())
+					has_shape = true
 			"path":
 				if SpellGlobals.PATH_SCRIPTS.has(component["value"]):
 					var path_node = Node.new()
@@ -315,6 +317,16 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 				new_spell.child_spell_array = component.get("child_spell", [])
 				new_spell.spawn_child = func(child_arr: Array, xform: Transform3D):
 					_spawn_spell_object(xform, 0.0, child_arr)
+			"spell_ref":
+				# Spawn the referenced spell as a fully independent SpellBase
+				var ref_array := SpellLibrary.get_spell(component["name"])
+				if not ref_array.is_empty():
+					_spawn_spell_object(spawn_transform, charge_multiplier, ref_array)
+
+	# Don't add an invisible ghost container if no shape was attached
+	if not has_shape:
+		new_spell.queue_free()
+		return null
 
 	get_tree().current_scene.add_child(new_spell)
 	new_spell.global_transform = spawn_transform
