@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://crrfsmacn0anu"]
+
+[ext_resource type="Script" uid="uid://sbeam111111111" path="res://Scripts/Spell_Stuff/shape_beam.gd" id="1_beam"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_beam"]
+albedo_color = Color(0.2, 0.5, 1.0, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_beam"]
+material = SubResource("StandardMaterial3D_beam")
+radius = 0.1
+height = 5.0
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_beam"]
+radius = 0.1
+height = 5.0
+
+[node name="ShapeBeam" type="Area3D" unique_id=100000010]
+script = ExtResource("1_beam")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=100000011]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, -2.5)
+mesh = SubResource("CapsuleMesh_beam")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=100000012]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, -2.5)
+shape = SubResource("CapsuleShape3D_beam")

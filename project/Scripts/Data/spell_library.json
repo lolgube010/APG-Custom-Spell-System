@@ -2,15 +2,15 @@
 	"Fireball": [
 		{
 			"type": "casting",
-			"value": 0
+			"value": 0.0
 		},
 		{
 			"type": "shape",
-			"value": 0
+			"value": 0.0
 		},
 		{
 			"type": "path",
-			"value": 0
+			"value": 0.0
 		}
 	]
 }

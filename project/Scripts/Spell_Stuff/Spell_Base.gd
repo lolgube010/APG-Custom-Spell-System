@@ -11,6 +11,7 @@ var split_count: int = 0
 var is_piercing: bool = false
 var does_ricochet: bool = false
 var is_environment_piercing: bool = false
+var has_trail: bool = false
 
 var lifetime: float = 5.0
 

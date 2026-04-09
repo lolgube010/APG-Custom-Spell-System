@@ -296,6 +296,8 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 						new_spell.does_ricochet = amount
 					SpellGlobals.SpellModifierBool.EnvironmentPiercing:
 						new_spell.is_environment_piercing = amount
+					SpellGlobals.SpellModifierBool.Trail:
+						new_spell.has_trail = amount
 
 	# Second pass: attach shape, path, element, trigger, and spell_ref components
 	var has_shape := false
@@ -327,6 +329,11 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 	if not has_shape:
 		new_spell.queue_free()
 		return null
+
+	if new_spell.has_trail:
+		var trail := Node.new()
+		trail.set_script(load("res://Scripts/Spell_Stuff/trail_component.gd"))
+		new_spell.add_child(trail)
 
 	get_tree().current_scene.add_child(new_spell)
 	new_spell.global_transform = spawn_transform

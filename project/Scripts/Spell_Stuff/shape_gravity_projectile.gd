@@ -1,0 +1,41 @@
+extends Area3D
+
+var parent_spell: SpellBase
+const PULL_FORCE: float = 20.0
+
+func _ready() -> void:
+	parent_spell = get_parent() as SpellBase
+	body_entered.connect(_on_body_entered)
+	_apply_element_color()
+
+func _apply_element_color() -> void:
+	if not SpellGlobals.ELEMENT_COLORS.has(parent_spell.element):
+		return
+	var mesh_instance := $MeshInstance3D as MeshInstance3D
+	var mat = mesh_instance.get_active_material(0)
+	if not mat:
+		return
+	var material := mat.duplicate() as StandardMaterial3D
+	material.albedo_color = SpellGlobals.ELEMENT_COLORS[parent_spell.element]
+	mesh_instance.material_override = material
+
+func _physics_process(delta: float) -> void:
+	if not is_instance_valid(parent_spell):
+		return
+	for body in get_overlapping_bodies():
+		var dir := (global_position - body.global_position).normalized()
+		if body is RigidBody3D:
+			body.apply_central_force(dir * PULL_FORCE)
+		elif body is CharacterBody3D:
+			body.velocity += dir * PULL_FORCE * delta
+
+func _on_body_entered(body: Node3D) -> void:
+	if body is StaticBody3D:
+		if parent_spell.is_environment_piercing:
+			return
+		parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
+		parent_spell.queue_free()
+		return
+	parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
+	if not parent_spell.is_piercing:
+		parent_spell.queue_free()
