@@ -55,21 +55,18 @@ func _ready() -> void:
 	wand.spell_stop.connect(_on_spell_stop)
 
 func _on_spell_creation_spell_data_created(spell_array: Array) -> void:
-	if spell_array.is_empty():
-		print("spell_casting.gd empty spell array!")
-		return
-	print("spell_casting.gd cached spell creation data!!!")
 	our_spell_array = spell_array
 	_flat_spell_array = _flatten_spell_refs(spell_array)
-
 	current_casting_type = -1
 	current_cast_speed = 1.0
 	for component in _flat_spell_array:
-		if component["type"] == "casting":
+		# Only the FIRST casting entry sets the casting type.
+		# Expanded spell refs contribute their own casting entries; without this
+		# guard they would overwrite the top-level casting type.
+		if component["type"] == "casting" and current_casting_type == -1:
 			current_casting_type = int(component["value"])
 		elif component["type"] == "mod_float" and int(component["value"]) == SpellGlobals.SpellModifierFloat.CastSpeed:
 			current_cast_speed = maxf(0.1, component.get("amount", 1.0))
-
 	wand.cast_speed = current_cast_speed
 	fire_rate_timer.wait_time = BASE_FIRE_RATE / current_cast_speed
 
@@ -93,12 +90,19 @@ func _on_spell_cast():
 
 		SpellGlobals.SpellCasting.SelfInstant:
 			_apply_self_effects(false)
+			_fire_shape_for_self_cast()
 
 		SpellGlobals.SpellCasting.SelfToggle:
 			_apply_self_effects(true)
+			_fire_shape_for_self_cast()
 
 		SpellGlobals.SpellCasting.SelfHold:
+			var first_hold := _active_hold_effects.is_empty()
 			_apply_hold_effects()
+			# Mirror the _apply_hold_effects re-entry guard so the shape doesn't
+			# re-trigger on every wand animation callback while holding.
+			if first_hold:
+				_fire_shape_for_self_cast()
 
 func _begin_charge() -> void:
 	_is_charging = true
@@ -257,6 +261,69 @@ func _on_fire_rate_timeout() -> void:
 	if wand:
 		_schedule_spell(wand.get_spell_spawn_transform())
 
+func _array_has_shape(arr: Array) -> bool:
+	for c in arr:
+		if c["type"] == "shape":
+			return true
+	return false
+
+## Returns the casting type that governs how a shape fires when combined with a
+## Self casting type. This is the SECOND casting entry in the flat array — the
+## first belongs to the Self type, the second comes from the expanded spell ref.
+func _get_shape_firing_type() -> int:
+	var skipped_first := false
+	for c in _flat_spell_array:
+		if c["type"] != "casting":
+			continue
+		if not skipped_first:
+			skipped_first = true
+			continue
+		return int(c["value"])
+	return SpellGlobals.SpellCasting.Burst  # default when no second casting entry
+
+## Fire the shape component of a Self+shape combined spell, respecting whatever
+## firing mode the embedded spell ref declared (Burst, Continuous, etc.).
+func _fire_shape_for_self_cast() -> void:
+	if not _array_has_shape(_flat_spell_array):
+		return
+	match _get_shape_firing_type():
+		SpellGlobals.SpellCasting.Continous:
+			if fire_rate_timer.is_stopped():
+				_schedule_spell(wand.get_spell_spawn_transform())
+				fire_rate_timer.start()
+		SpellGlobals.SpellCasting.ChargeUp:
+			if not _is_charging:
+				_begin_charge()
+		_:  # Burst and anything else — fire once
+			_schedule_spell(wand.get_spell_spawn_transform())
+
+## Applies self-cast effects found in a child spell array.
+## All self-cast types (SelfInstant / SelfToggle / SelfHold) are treated as
+## one-shot with DEFAULT_EFFECT_DURATION — there's no LMB hold context here.
+func _apply_child_spell_effects(arr: Array) -> void:
+	var has_self_cast := false
+	for component in arr:
+		if component["type"] == "casting":
+			var cv := int(component["value"])
+			has_self_cast = cv == SpellGlobals.SpellCasting.SelfInstant \
+						 or cv == SpellGlobals.SpellCasting.SelfToggle \
+						 or cv == SpellGlobals.SpellCasting.SelfHold
+			break
+	if not has_self_cast:
+		return
+	for component in arr:
+		if component["type"] != "effect":
+			continue
+		var ev := int(component["value"])
+		if not SpellGlobals.EFFECT_SCRIPTS.has(ev):
+			continue
+		var node := Node.new()
+		node.set_script(SpellGlobals.EFFECT_SCRIPTS[ev])
+		node.player_root = player_root
+		node.duration = DEFAULT_EFFECT_DURATION
+		_apply_effect_amount(node, component)
+		player_root.add_child(node)
+
 func _flatten_spell_refs(arr: Array) -> Array:
 	var result: Array = []
 	for entry in arr:
@@ -269,6 +336,8 @@ func _flatten_spell_refs(arr: Array) -> Array:
 	return result
 
 func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float = 0.0, spell_array: Array = []) -> Node3D:
+	# Track before defaulting — child spells always pass an explicit non-empty array.
+	var is_child_spell := not spell_array.is_empty()
 	if spell_array.is_empty():
 		spell_array = our_spell_array
 
@@ -342,6 +411,11 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 					_spawn_spell_object(xform, 0.0, child_arr)
 				if int(component["value"]) == SpellGlobals.SpellTrigger.OnTimer:
 					new_spell.timer_trigger_interval = maxf(0.1, component.get("amount", 1.0))
+
+	# If this is a child spell (fired by a trigger), apply any self-cast effects
+	# it contains. Top-level spells handle this in _on_spell_cast instead.
+	if is_child_spell:
+		_apply_child_spell_effects(spell_array)
 
 	# Don't add an invisible ghost container if no shape was attached
 	if not has_shape:

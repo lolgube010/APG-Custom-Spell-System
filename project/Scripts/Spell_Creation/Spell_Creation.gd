@@ -10,6 +10,14 @@ signal spell_data_created(spell_array: Array)
 const SAVE_PATH = "res://Scripts/Data/graph_layout_debug.json"
 
 var _library_list: VBoxContainer
+var _library_panel: Panel
+
+const PANEL_WIDTH        = 290
+const PANEL_TOP          = 40
+const PANEL_HEADER_H     = 76   # title label + button row + VBox separation
+const PANEL_ROW_H        = 32
+const PANEL_MIN_H        = 110
+const PANEL_MAX_H        = 460
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -42,18 +50,18 @@ func _ready() -> void:
 # ---------------------------------------------------------------------------
 
 func _build_library_panel() -> void:
-	var panel := Panel.new()
-	panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	panel.offset_left   = -220
-	panel.offset_top    = 40
-	panel.offset_right  = 0
-	panel.offset_bottom = 320
-	add_child(panel)
+	_library_panel = Panel.new()
+	_library_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_library_panel.offset_left   = -PANEL_WIDTH
+	_library_panel.offset_top    = PANEL_TOP
+	_library_panel.offset_right  = 0
+	_library_panel.offset_bottom = PANEL_TOP + PANEL_MIN_H
+	add_child(_library_panel)
 
 	var vbox := VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vbox.add_theme_constant_override("separation", 4)
-	panel.add_child(vbox)
+	_library_panel.add_child(vbox)
 
 	var title := Label.new()
 	title.text = "Spell Library"
@@ -75,7 +83,9 @@ func _build_library_panel() -> void:
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_library_list = VBoxContainer.new()
+	_library_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_library_list)
 	vbox.add_child(scroll)
 
@@ -85,8 +95,10 @@ func _build_library_panel() -> void:
 func _refresh_library_panel() -> void:
 	for child in _library_list.get_children():
 		child.queue_free()
-	for spell_name in SpellLibrary.get_all_names():
+	var names := SpellLibrary.get_all_names()
+	for spell_name in names:
 		var row := HBoxContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var captured: String = spell_name
 		var name_field := LineEdit.new()
 		name_field.text = spell_name
@@ -95,7 +107,7 @@ func _refresh_library_panel() -> void:
 		name_field.focus_exited.connect(func(): SpellLibrary.rename_spell(captured, name_field.text.strip_edges()))
 		var load_btn := Button.new()
 		load_btn.text = "Load"
-		load_btn.custom_minimum_size = Vector2(40, 0)
+		load_btn.custom_minimum_size = Vector2(48, 0)
 		load_btn.pressed.connect(func(): _load_spell_to_graph(SpellLibrary.get_spell(captured)))
 		var del_btn := Button.new()
 		del_btn.text = "X"
@@ -105,6 +117,14 @@ func _refresh_library_panel() -> void:
 		row.add_child(load_btn)
 		row.add_child(del_btn)
 		_library_list.add_child(row)
+	_update_panel_size(names.size())
+
+func _update_panel_size(spell_count: int) -> void:
+	if not is_instance_valid(_library_panel):
+		return
+	var needed := PANEL_HEADER_H + spell_count * PANEL_ROW_H
+	var h := clampi(needed, PANEL_MIN_H, PANEL_MAX_H)
+	_library_panel.offset_bottom = PANEL_TOP + h
 
 func _load_spell_to_graph(array: Array) -> void:
 	# Clear existing dynamic nodes and connections
@@ -155,7 +175,7 @@ func _load_spell_to_graph(array: Array) -> void:
 		prev_name = node.name
 		prev_out_port = port
 		nodeCount += 1
-		x += 220.0
+		x += node.size.x + 30.0
 
 	updateNodeCount()
 	broadcast_spell_update()

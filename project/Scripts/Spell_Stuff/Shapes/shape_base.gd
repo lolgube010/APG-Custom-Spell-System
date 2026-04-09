@@ -39,6 +39,8 @@ func _on_body_entered(body: Node3D) -> void:
 		parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
 		parent_spell.end_spell(global_transform)
 		return
+	if body.has_method("take_damage"):
+		body.take_damage(parent_spell.damage)
 	parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
 	if not parent_spell.is_piercing:
 		parent_spell.end_spell(global_transform)

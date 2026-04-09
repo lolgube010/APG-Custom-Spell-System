@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://l676rw2rur7f" path="res://Scripts/main_scene.gd" id="1_rpqi1"]
 [ext_resource type="PackedScene" uid="uid://dj20y2vuteryh" path="res://Scripts/Spell_Creation/SpellCreation.tscn" id="2_x4av3"]
 [ext_resource type="Script" uid="uid://def4s2ew44578" path="res://Scripts/Spell_Casting/Spell_Casting.gd" id="4_uxrcv"]
+[ext_resource type="PackedScene" path="res://Scripts/TrainingDummy.tscn" id="5_dummy"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_3mqji"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -59,6 +60,23 @@ mesh = SubResource("BoxMesh_uxrcv")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Geo/MeshInstance3D2/StaticBody3D" unique_id=236141450]
 shape = SubResource("BoxShape3D_rf2cd")
+
+[node name="Dummies" type="Node3D" parent="." unique_id=2000000001]
+
+[node name="Dummy_Left" parent="Dummies" unique_id=2000000002 instance=ExtResource("5_dummy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -5)
+
+[node name="Dummy_Center" parent="Dummies" unique_id=2000000003 instance=ExtResource("5_dummy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -5)
+
+[node name="Dummy_Right" parent="Dummies" unique_id=2000000004 instance=ExtResource("5_dummy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -5)
+
+[node name="Dummy_PierceLine1" parent="Dummies" unique_id=2000000005 instance=ExtResource("5_dummy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
+
+[node name="Dummy_PierceLine2" parent="Dummies" unique_id=2000000006 instance=ExtResource("5_dummy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -7)
 
 [node name="SpellSystem" type="Node" parent="." unique_id=1445000400]
 script = ExtResource("1_rpqi1")

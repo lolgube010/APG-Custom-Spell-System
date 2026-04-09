@@ -32,5 +32,7 @@ func _on_body_entered(body: Node3D) -> void:
 	if body is StaticBody3D or _hit_bodies.has(body):
 		return
 	_hit_bodies.append(body)
+	if body.has_method("take_damage"):
+		body.take_damage(parent_spell.damage)
 	parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
 	# Wall persists — does not destroy on hit

@@ -34,5 +34,7 @@ func _on_body_entered(body: Node3D) -> void:
 	if _hit_bodies.has(body) or body is StaticBody3D:
 		return
 	_hit_bodies.append(body)
+	if body.has_method("take_damage"):
+		body.take_damage(parent_spell.damage)
 	parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
 	# AOE persists for the spell's lifetime — does not destroy on hit
