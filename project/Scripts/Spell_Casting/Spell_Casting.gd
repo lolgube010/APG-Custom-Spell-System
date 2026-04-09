@@ -21,6 +21,11 @@ const DEFAULT_EFFECT_DURATION: float = 5.0
 var active_toggle_effects: Dictionary = {}  # { SpellEffect value: Node }
 var _active_hold_effects: Dictionary = {}   # { SpellEffect value: Node }
 
+# SelfHold / SelfToggle repeat — re-fires one-shot effects (e.g. throws) while active
+const HOLD_REPEAT_INTERVAL: float = 0.5
+var _hold_repeat_timer: Timer
+var _toggle_repeat_timer: Timer
+
 # Delayed modifier
 const DEFAULT_CAST_DELAY: float = 2.0
 
@@ -34,6 +39,16 @@ func _ready() -> void:
 	fire_rate_timer.wait_time = BASE_FIRE_RATE
 	fire_rate_timer.timeout.connect(_on_fire_rate_timeout)
 	add_child(fire_rate_timer)
+
+	_hold_repeat_timer = Timer.new()
+	_hold_repeat_timer.wait_time = HOLD_REPEAT_INTERVAL
+	_hold_repeat_timer.timeout.connect(_on_hold_repeat_timeout)
+	add_child(_hold_repeat_timer)
+
+	_toggle_repeat_timer = Timer.new()
+	_toggle_repeat_timer.wait_time = HOLD_REPEAT_INTERVAL
+	_toggle_repeat_timer.timeout.connect(_on_toggle_repeat_timeout)
+	add_child(_toggle_repeat_timer)
 
 	wand.spell_cast.connect(_on_spell_cast)
 	wand.spell_stop.connect(_on_spell_stop)
@@ -113,6 +128,15 @@ func _get_split_count() -> int:
 			return maxi(1, component.get("amount", 1))
 	return 1
 
+func _apply_effect_amount(node: Node, component: Dictionary) -> void:
+	var raw = component.get("amount", null)
+	if raw == null:
+		return
+	if raw is Dictionary:
+		node.set("amount_vec", Vector3(raw.get("x", 1.0), raw.get("y", 1.0), raw.get("z", 1.0)))
+	else:
+		node.set("amount", float(raw))
+
 func _get_duration_mult() -> float:
 	for component in our_spell_array:
 		if component["type"] == "mod_float" and component["value"] == SpellGlobals.SpellModifierFloat.Duration:
@@ -133,25 +157,37 @@ func _apply_self_effects(is_toggle: bool) -> void:
 		if not SpellGlobals.EFFECT_SCRIPTS.has(effect_value):
 			continue
 		if is_toggle:
-			if active_toggle_effects.has(effect_value) and is_instance_valid(active_toggle_effects[effect_value]):
-				active_toggle_effects[effect_value].remove_effect()
-				active_toggle_effects[effect_value].queue_free()
+			if active_toggle_effects.has(effect_value):
+				# toggle OFF — has(effect_value) is the source of truth, not node validity
+				var existing = active_toggle_effects[effect_value]
 				active_toggle_effects.erase(effect_value)
-			else:
-				var node := Node.new()
-				node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
-				node.player_root = player_root
-				node.duration = -1.0
-				player_root.add_child(node)
-				active_toggle_effects[effect_value] = node
+				if is_instance_valid(existing):
+					existing.remove_effect()
+					existing.queue_free()
+				if active_toggle_effects.is_empty():
+					_toggle_repeat_timer.stop()
+				continue
+			# toggle ON — fire immediately and start repeat timer
+			var node := Node.new()
+			node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
+			node.player_root = player_root
+			node.duration = -1.0
+			_apply_effect_amount(node, component)
+			player_root.add_child(node)
+			active_toggle_effects[effect_value] = node
+			if _toggle_repeat_timer.is_stopped():
+				_toggle_repeat_timer.start()
 		else:
 			var node := Node.new()
 			node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
 			node.player_root = player_root
 			node.duration = DEFAULT_EFFECT_DURATION * _get_duration_mult()
+			_apply_effect_amount(node, component)
 			player_root.add_child(node)
 
 func _apply_hold_effects() -> void:
+	if not _active_hold_effects.is_empty():
+		return  # already holding — avoid re-entry from looping animation
 	for component in our_spell_array:
 		if component["type"] != "effect":
 			continue
@@ -162,13 +198,52 @@ func _apply_hold_effects() -> void:
 		node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
 		node.player_root = player_root
 		node.duration = -1.0
+		_apply_effect_amount(node, component)
 		player_root.add_child(node)
 		_active_hold_effects[effect_value] = node
+	if not _active_hold_effects.is_empty():
+		_hold_repeat_timer.start()
+
+func _on_hold_repeat_timeout() -> void:
+	for effect_value in _active_hold_effects.keys():
+		if not is_instance_valid(_active_hold_effects[effect_value]):
+			# one-shot effect (e.g. throw) freed itself — re-fire it
+			var component := _find_effect_component(effect_value)
+			if component.is_empty():
+				continue
+			var node := Node.new()
+			node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
+			node.player_root = player_root
+			node.duration = -1.0
+			_apply_effect_amount(node, component)
+			player_root.add_child(node)
+			_active_hold_effects[effect_value] = node
+
+func _on_toggle_repeat_timeout() -> void:
+	for effect_value in active_toggle_effects.keys():
+		if not is_instance_valid(active_toggle_effects[effect_value]):
+			var component := _find_effect_component(effect_value)
+			if component.is_empty():
+				continue
+			var node := Node.new()
+			node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
+			node.player_root = player_root
+			node.duration = -1.0
+			_apply_effect_amount(node, component)
+			player_root.add_child(node)
+			active_toggle_effects[effect_value] = node
+
+func _find_effect_component(effect_value: int) -> Dictionary:
+	for component in our_spell_array:
+		if component["type"] == "effect" and component["value"] == effect_value:
+			return component
+	return {}
 
 func _on_spell_stop() -> void:
 	_charge_cancelled = true
 	_is_charging = false
 	fire_rate_timer.stop()
+	_hold_repeat_timer.stop()
 	for effect_value in _active_hold_effects:
 		if is_instance_valid(_active_hold_effects[effect_value]):
 			_active_hold_effects[effect_value].remove_effect()

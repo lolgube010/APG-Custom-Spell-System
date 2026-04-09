@@ -5,35 +5,14 @@
 			"from_port": 0,
 			"keep_alive": false,
 			"to_node": "Simple Node 0",
-			"to_port": 7
-		},
-		{
-			"from_node": "Simple Node 0",
-			"from_port": 7,
-			"keep_alive": false,
-			"to_node": "Simple Node 1",
-			"to_port": 6
-		},
-		{
-			"from_node": "Simple Node 1",
-			"from_port": 6,
-			"keep_alive": false,
-			"to_node": "Simple Node 2",
-			"to_port": 5
-		},
-		{
-			"from_node": "Simple Node 2",
-			"from_port": 5,
-			"keep_alive": false,
-			"to_node": "Simple Node 3",
 			"to_port": 4
 		},
 		{
-			"from_node": "Simple Node 3",
+			"from_node": "Simple Node 0",
 			"from_port": 4,
 			"keep_alive": false,
-			"to_node": "Simple Node 4",
-			"to_port": 3
+			"to_node": "Simple Node 1",
+			"to_port": 5
 		}
 	],
 	"nodes": {
@@ -48,111 +27,6 @@
 						"y": 1.0,
 						"z": 1.0
 					},
-					"dropdown": 0
-				},
-				{
-					"amount": 1.0,
-					"dropdown": 0
-				},
-				{
-					"amount": false,
-					"dropdown": 0
-				},
-				{
-					"amount": 1,
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 1
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				}
-			],
-			"is_dynamic": true,
-			"x": 100.0,
-			"y": 100.0
-		},
-		"Simple Node 1": {
-			"dropdown_states": [
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": {
-						"x": 1.0,
-						"y": 1.0,
-						"z": 1.0
-					},
-					"dropdown": 0
-				},
-				{
-					"amount": 1.0,
-					"dropdown": 0
-				},
-				{
-					"amount": false,
-					"dropdown": 0
-				},
-				{
-					"amount": 1,
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				}
-			],
-			"is_dynamic": true,
-			"x": 600.0,
-			"y": 100.0
-		},
-		"Simple Node 2": {
-			"dropdown_states": [
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": {
-						"x": 1.0,
-						"y": 1.0,
-						"z": 1.0
-					},
-					"dropdown": 0
-				},
-				{
-					"amount": 1.0,
-					"dropdown": 0
-				},
-				{
-					"amount": false,
-					"dropdown": 0
-				},
-				{
-					"amount": 1,
-					"dropdown": 0
-				},
-				{
 					"dropdown": 5
 				},
 				{
@@ -162,20 +36,7 @@
 					"dropdown": 0
 				},
 				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				}
-			],
-			"is_dynamic": true,
-			"x": 1100.0,
-			"y": 100.0
-		},
-		"Simple Node 3": {
-			"dropdown_states": [
-				{
-					"dropdown": 0
+					"dropdown": 3
 				},
 				{
 					"amount": {
@@ -183,6 +44,19 @@
 						"y": 1.0,
 						"z": 1.0
 					},
+					"dropdown": 0
+				},
+				{
+					"dropdown": 0
+				}
+			],
+			"is_dynamic": true,
+			"x": 280.0,
+			"y": 140.0
+		},
+		"Simple Node 1": {
+			"dropdown_states": [
+				{
 					"dropdown": 0
 				},
 				{
@@ -190,82 +64,30 @@
 					"dropdown": 0
 				},
 				{
-					"amount": false,
-					"dropdown": 0
-				},
-				{
-					"amount": 1,
 					"dropdown": 0
 				},
 				{
 					"dropdown": 0
 				},
 				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				}
-			],
-			"is_dynamic": true,
-			"x": 1620.0,
-			"y": 100.0
-		},
-		"Simple Node 4": {
-			"dropdown_states": [
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": {
-						"x": 1.0,
-						"y": 1.0,
-						"z": 1.0
-					},
 					"dropdown": 0
 				},
 				{
 					"amount": 10.0,
-					"dropdown": 2
-				},
-				{
-					"amount": true,
-					"dropdown": 1
-				},
-				{
-					"amount": 1,
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
+					"dropdown": 4
 				},
 				{
 					"dropdown": 0
 				}
 			],
 			"is_dynamic": true,
-			"x": 2113.0,
-			"y": 100.0
+			"x": 840.0,
+			"y": 140.0
 		},
 		"StartNode": {
 			"is_dynamic": false,
-			"x": -100.0,
-			"y": 300.0
+			"x": 20.0,
+			"y": 260.0
 		}
 	}
 }

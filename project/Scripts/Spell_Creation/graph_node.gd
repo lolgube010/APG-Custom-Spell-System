@@ -4,40 +4,46 @@ extends GraphNode
 signal setting_changed
 
 func _ready() -> void:
-	# --- Set up the Close Button ---
-	var close_btn:Button = Button.new()
+	# --- Close Button ---
+	var close_btn := Button.new()
 	close_btn.pressed.connect(_on_close_button_pressed)
 	close_btn.custom_minimum_size = Vector2(32, 0)
 	close_btn.text = "X"
 	close_btn.theme = theme
 	titlebar.add_child(close_btn)
 
-	# --- Dynamically Build Rows, Dropdowns, and Slots ---
+	# --- Build one row per attribute_config entry ---
 	for i in range(SpellGlobals.attribute_configs.size()):
 		var config = SpellGlobals.attribute_configs[i]
 		var input_type: String = config.get("input_type", "none")
 
-		# Wrap each row in a PanelContainer so we can colour its background
 		var panel := PanelContainer.new()
 		panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
-		var row: HBoxContainer = HBoxContainer.new()
+		var row := HBoxContainer.new()
 
-		# 1. Label
-		var label: Label = Label.new()
+		# Label
+		var label := Label.new()
 		label.text = config["name"]
 		label.custom_minimum_size = Vector2(90, 0)
 		row.add_child(label)
 
-		# 2. Dropdown
-		var dropdown: OptionButton = OptionButton.new()
+		# Dropdown — populate from enum or from MODIFIER_ITEMS
+		var dropdown := OptionButton.new()
 		dropdown.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		for element_name in config["enum"].keys():
-			dropdown.add_item(element_name.capitalize())
-		dropdown.item_selected.connect(func(_i): setting_changed.emit())
+		if input_type == "modifier":
+			for item in SpellGlobals.MODIFIER_ITEMS:
+				dropdown.add_item(item["label"])
+		else:
+			for element_name in config["enum"].keys():
+				dropdown.add_item(element_name.capitalize())
+
+		# Generic signal only for plain rows; dynamic/modifier connect their own below
+		if input_type != "dynamic" and input_type != "modifier":
+			dropdown.item_selected.connect(func(_i): setting_changed.emit())
 		row.add_child(dropdown)
 
-		# 3. Input widget(s) based on input_type
+		# Input widget(s)
 		match input_type:
 			"float":
 				var spin := SpinBox.new()
@@ -84,15 +90,127 @@ func _ready() -> void:
 					spin.custom_minimum_size = Vector2(60, 0)
 					spin.value_changed.connect(func(_v): setting_changed.emit())
 					row.add_child(spin)
+			"dynamic":
+				var value_input_types: Dictionary = config.get("value_input_types", {})
+				var dyn := HBoxContainer.new()
+				var first_info = value_input_types.get(0, {"type": "none", "default": 1.0})
+				_update_dynamic_widget(dyn, first_info.get("type", "none"), first_info.get("default", 1.0))
+				dropdown.item_selected.connect(func(idx: int):
+					var info = value_input_types.get(idx, {"type": "none", "default": 1.0})
+					_update_dynamic_widget(dyn, info.get("type", "none"), info.get("default", 1.0))
+					setting_changed.emit()
+				)
+				row.add_child(dyn)
+			"modifier":
+				var dyn := HBoxContainer.new()
+				var first_item = SpellGlobals.MODIFIER_ITEMS[0]
+				_update_dynamic_widget(dyn, first_item["widget_type"], first_item.get("default", 1.0))
+				dropdown.item_selected.connect(func(idx: int):
+					var item = SpellGlobals.MODIFIER_ITEMS[idx]
+					_update_dynamic_widget(dyn, item["widget_type"], item.get("default", 1.0))
+					setting_changed.emit()
+				)
+				row.add_child(dyn)
 
 		panel.add_child(row)
 		add_child(panel)
 		set_slot(i, true, 0, config["color"], true, 0, config["color"])
 
-func _on_close_button_pressed() -> void:
-	delete_request.emit()
+# ---------------------------------------------------------------------------
+# Dynamic widget helpers
+# ---------------------------------------------------------------------------
 
-# Highlight or clear the background of a specific port row
+func _update_dynamic_widget(container: HBoxContainer, widget_type: String, default_val) -> void:
+	for child in container.get_children():
+		child.free()
+	match widget_type:
+		"float":
+			var spin := SpinBox.new()
+			spin.min_value = 0.0
+			spin.max_value = 10000.0
+			spin.step = 0.01
+			spin.value = float(default_val)
+			spin.custom_minimum_size = Vector2(90, 0)
+			spin.value_changed.connect(func(_v): setting_changed.emit())
+			container.add_child(spin)
+		"int":
+			var spin := SpinBox.new()
+			spin.min_value = 1
+			spin.max_value = 100
+			spin.step = 1
+			spin.rounded = true
+			spin.value = int(default_val)
+			spin.custom_minimum_size = Vector2(70, 0)
+			spin.value_changed.connect(func(_v): setting_changed.emit())
+			container.add_child(spin)
+		"bool":
+			var check := CheckBox.new()
+			var state_label := Label.new()
+			state_label.text = "OFF"
+			state_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+			check.toggled.connect(func(pressed: bool):
+				if pressed:
+					state_label.text = "ON"
+					state_label.add_theme_color_override("font_color", Color(0.2, 0.9, 0.2))
+				else:
+					state_label.text = "OFF"
+					state_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+				setting_changed.emit()
+			)
+			container.add_child(check)
+			container.add_child(state_label)
+		"vec":
+			for _axis in 3:
+				var spin := SpinBox.new()
+				spin.min_value = -100.0
+				spin.max_value = 100.0
+				spin.step = 0.01
+				spin.value = float(default_val)
+				spin.custom_minimum_size = Vector2(65, 0)
+				spin.value_changed.connect(func(_v): setting_changed.emit())
+				container.add_child(spin)
+		# "none": leave container empty
+
+func _read_container_amount(container: HBoxContainer, widget_type: String):
+	match widget_type:
+		"float":
+			if container.get_child_count() >= 1:
+				return (container.get_child(0) as SpinBox).value
+		"int":
+			if container.get_child_count() >= 1:
+				return int((container.get_child(0) as SpinBox).value)
+		"bool":
+			if container.get_child_count() >= 1:
+				return (container.get_child(0) as CheckBox).button_pressed
+		"vec":
+			if container.get_child_count() >= 3:
+				return {
+					"x": (container.get_child(0) as SpinBox).value,
+					"y": (container.get_child(1) as SpinBox).value,
+					"z": (container.get_child(2) as SpinBox).value,
+				}
+	return null
+
+func _write_container_amount(container: HBoxContainer, widget_type: String, amount) -> void:
+	if amount == null:
+		return
+	match widget_type:
+		"float", "int":
+			if container.get_child_count() >= 1:
+				(container.get_child(0) as SpinBox).value = float(amount)
+		"bool":
+			if container.get_child_count() >= 1:
+				(container.get_child(0) as CheckBox).button_pressed = bool(amount)
+		"vec":
+			if container.get_child_count() >= 3 and amount is Dictionary:
+				(container.get_child(0) as SpinBox).value = amount.get("x", 1.0)
+				(container.get_child(1) as SpinBox).value = amount.get("y", 1.0)
+				(container.get_child(2) as SpinBox).value = amount.get("z", 1.0)
+
+# ---------------------------------------------------------------------------
+# Slot highlights
+# ---------------------------------------------------------------------------
+
 func highlight_port(port_index: int, on: bool) -> void:
 	var panel := get_child(port_index) as PanelContainer
 	if not panel:
@@ -110,17 +228,31 @@ func clear_highlights() -> void:
 		if child is PanelContainer:
 			child.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
+func _on_close_button_pressed() -> void:
+	delete_request.emit()
+
+# ---------------------------------------------------------------------------
+# Data API
+# ---------------------------------------------------------------------------
+
 func get_data_for_port(port_index: int) -> Dictionary:
 	var config = SpellGlobals.attribute_configs[port_index]
 	var row := get_child(port_index).get_child(0) as HBoxContainer
-	var dropdown: OptionButton = row.get_child(1)
+	var dropdown := row.get_child(1) as OptionButton
+	var input_type: String = config.get("input_type", "none")
 
-	var data = {
-		"type": config["id"],
-		"value": dropdown.get_selected_id()
-	}
+	# Modifier row: type and value come from the selected MODIFIER_ITEMS entry
+	if input_type == "modifier":
+		var item = SpellGlobals.MODIFIER_ITEMS[dropdown.selected]
+		var data = {"type": item["spell_type"], "value": item["spell_value"]}
+		var dyn := row.get_child(2) as HBoxContainer
+		var amount = _read_container_amount(dyn, item["widget_type"])
+		if amount != null:
+			data["amount"] = amount
+		return data
 
-	match config.get("input_type", "none"):
+	var data = {"type": config["id"], "value": dropdown.get_selected_id()}
+	match input_type:
 		"float":
 			data["amount"] = row.get_child(2).value
 		"int":
@@ -133,7 +265,13 @@ func get_data_for_port(port_index: int) -> Dictionary:
 				"y": row.get_child(3).value,
 				"z": row.get_child(4).value,
 			}
-
+		"dynamic":
+			var value_types: Dictionary = config.get("value_input_types", {})
+			var info = value_types.get(dropdown.selected, {"type": "none", "default": 1.0})
+			var dyn := row.get_child(2) as HBoxContainer
+			var amount = _read_container_amount(dyn, info.get("type", "none"))
+			if amount != null:
+				data["amount"] = amount
 	return data
 
 func get_dropdown_states() -> Array:
@@ -146,10 +284,11 @@ func get_dropdown_states() -> Array:
 		if not row:
 			continue
 		var config = SpellGlobals.attribute_configs[config_index]
-		var dropdown = row.get_child(1) as OptionButton
+		var dropdown := row.get_child(1) as OptionButton
+		var input_type: String = config.get("input_type", "none")
 		var state = {"dropdown": dropdown.selected}
 
-		match config.get("input_type", "none"):
+		match input_type:
 			"float":
 				state["amount"] = row.get_child(2).value
 			"int":
@@ -162,6 +301,19 @@ func get_dropdown_states() -> Array:
 					"y": row.get_child(3).value,
 					"z": row.get_child(4).value,
 				}
+			"dynamic":
+				var value_types: Dictionary = config.get("value_input_types", {})
+				var info = value_types.get(dropdown.selected, {"type": "none", "default": 1.0})
+				var dyn := row.get_child(2) as HBoxContainer
+				var amount = _read_container_amount(dyn, info.get("type", "none"))
+				if amount != null:
+					state["amount"] = amount
+			"modifier":
+				var item = SpellGlobals.MODIFIER_ITEMS[dropdown.selected]
+				var dyn := row.get_child(2) as HBoxContainer
+				var amount = _read_container_amount(dyn, item["widget_type"])
+				if amount != null:
+					state["amount"] = amount
 
 		states.append(state)
 		config_index += 1
@@ -180,14 +332,14 @@ func set_dropdown_states(states: Array) -> void:
 			continue
 		var config = SpellGlobals.attribute_configs[config_index]
 		var state = states[state_index]
-		var dropdown = row.get_child(1) as OptionButton
+		var dropdown := row.get_child(1) as OptionButton
+		var input_type: String = config.get("input_type", "none")
 
-		# Support old format (plain int) and new format (dict)
-		if state is int:
-			dropdown.select(state)
-		elif state is Dictionary:
-			dropdown.select(state.get("dropdown", 0))
-			match config.get("input_type", "none"):
+		var selected_idx: int = state if state is int else state.get("dropdown", 0)
+		dropdown.select(selected_idx)
+
+		if state is Dictionary:
+			match input_type:
 				"float":
 					if state.has("amount"):
 						row.get_child(2).value = state["amount"]
@@ -202,6 +354,20 @@ func set_dropdown_states(states: Array) -> void:
 						row.get_child(2).value = state["amount"].get("x", 1.0)
 						row.get_child(3).value = state["amount"].get("y", 1.0)
 						row.get_child(4).value = state["amount"].get("z", 1.0)
+				"dynamic":
+					# select() doesn't emit item_selected, rebuild widget manually
+					var value_types: Dictionary = config.get("value_input_types", {})
+					var info = value_types.get(selected_idx, {"type": "none", "default": 1.0})
+					var dyn := row.get_child(2) as HBoxContainer
+					_update_dynamic_widget(dyn, info.get("type", "none"), info.get("default", 1.0))
+					if state.has("amount"):
+						_write_container_amount(dyn, info.get("type", "none"), state["amount"])
+				"modifier":
+					var item = SpellGlobals.MODIFIER_ITEMS[selected_idx]
+					var dyn := row.get_child(2) as HBoxContainer
+					_update_dynamic_widget(dyn, item["widget_type"], item.get("default", 1.0))
+					if state.has("amount"):
+						_write_container_amount(dyn, item["widget_type"], state["amount"])
 
 		state_index += 1
 		config_index += 1

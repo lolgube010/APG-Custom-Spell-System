@@ -17,7 +17,7 @@ enum SpellShape { Orb, AOE, Beam, Explode, Cone, Wall, Deployable, GravityProjec
 #decides how the spell is cast
 enum SpellCasting { Burst, Continous, SelfInstant, SelfToggle, ChargeUp, SelfHold }
 #decides the effect the spell will have when hitting a target
-enum SpellEffect { Scale, MoveSpeed, SlowMo, Levitation, Throw, Poison, Thorns, Invincibilty, Gravity }
+enum SpellEffect { Scale, MoveSpeed, SlowMo, Levitation, ThrowLook, Poison, Thorns, Invincibilty, Gravity, ThrowRandom }
 #types of amplifications for nodes
 enum SpellAmplification { Half, Double, Quad, Ten }
 #a trigger for when a spell will spawn another spell
@@ -43,27 +43,57 @@ const PATH_SCRIPTS: Dictionary = {
 	SpellPath.Boomerang:         preload("res://Scripts/Spell_Stuff/Paths/path_boomerang.gd"),
 }
 
+# Maps SpellEffect integer value → {type, default} for graph node input widgets.
+# Integer keys are used because enum values can't be const dict keys in other files.
+# Order matches SpellEffect enum: Scale=0 MoveSpeed=1 SlowMo=2 Levitation=3 ThrowLook=4
+#                                 Poison=5 Thorns=6 Invincibilty=7 Gravity=8 ThrowRandom=9
+# Flat list of every modifier, each with its spell-array type/value and widget metadata.
+# Used to populate the single combined Modifier row in the graph node.
+const MODIFIER_ITEMS: Array = [
+	{"label": "Cast Speed",   "spell_type": "mod_float", "spell_value": 0, "widget_type": "float", "default": 1.0},
+	{"label": "Move Speed",   "spell_type": "mod_float", "spell_value": 1, "widget_type": "float", "default": 1.0},
+	{"label": "Duration",     "spell_type": "mod_float", "spell_value": 2, "widget_type": "float", "default": 1.0},
+	{"label": "Cast Force",   "spell_type": "mod_float", "spell_value": 3, "widget_type": "float", "default": 1.0},
+	{"label": "Delay",        "spell_type": "mod_float", "spell_value": 4, "widget_type": "float", "default": 2.0},
+	{"label": "Size",         "spell_type": "mod_vec",   "spell_value": 0, "widget_type": "vec",   "default": 1.0},
+	{"label": "Piercing",     "spell_type": "mod_bool",  "spell_value": 0, "widget_type": "bool",  "default": false},
+	{"label": "Ricochet",     "spell_type": "mod_bool",  "spell_value": 1, "widget_type": "bool",  "default": false},
+	{"label": "Env Piercing", "spell_type": "mod_bool",  "spell_value": 2, "widget_type": "bool",  "default": false},
+	{"label": "Split",        "spell_type": "mod_int",   "spell_value": 0, "widget_type": "int",   "default": 2},
+]
+
+const EFFECT_INPUT_TYPES: Dictionary = {
+	0: {"type": "vec",   "default": 2.0},
+	1: {"type": "float", "default": 2.0},
+	2: {"type": "float", "default": 0.3},
+	3: {"type": "float", "default": 3.0},
+	4: {"type": "float", "default": 20.0},
+	5: {"type": "float", "default": 5.0},
+	6: {"type": "float", "default": 0.5},
+	7: {"type": "none",  "default": 0.0},
+	8: {"type": "float", "default": 500.0},
+	9: {"type": "float", "default": 20.0},
+}
+
 const EFFECT_SCRIPTS: Dictionary = {
 	SpellEffect.Scale:        preload("res://Scripts/Spell_Stuff/Effects/effect_scale.gd"),
 	SpellEffect.MoveSpeed:    preload("res://Scripts/Spell_Stuff/Effects/effect_move_speed.gd"),
 	SpellEffect.SlowMo:       preload("res://Scripts/Spell_Stuff/Effects/effect_slow_mo.gd"),
 	SpellEffect.Levitation:   preload("res://Scripts/Spell_Stuff/Effects/effect_levitation.gd"),
-	SpellEffect.Throw:        preload("res://Scripts/Spell_Stuff/Effects/effect_throw.gd"),
+	SpellEffect.ThrowLook:    preload("res://Scripts/Spell_Stuff/Effects/effect_throw_look.gd"),
 	SpellEffect.Poison:       preload("res://Scripts/Spell_Stuff/Effects/effect_poison.gd"),
 	SpellEffect.Thorns:       preload("res://Scripts/Spell_Stuff/Effects/effect_thorns.gd"),
 	SpellEffect.Invincibilty: preload("res://Scripts/Spell_Stuff/Effects/effect_invincibility.gd"),
 	SpellEffect.Gravity:      preload("res://Scripts/Spell_Stuff/Effects/effect_gravity.gd"),
+	SpellEffect.ThrowRandom:  preload("res://Scripts/Spell_Stuff/Effects/effect_throw_random.gd"),
 }
 
 var attribute_configs = [
-	{"name": "Element",       "enum": SpellElement,       "color": Color.RED,        "id": "element",   "input_type": "none"},
-	{"name": "Modif (Vec)",   "enum": SpellModifierVec,   "color": Color.CYAN,       "id": "mod_vec",   "input_type": "vec"},
-	{"name": "Modif (Float)", "enum": SpellModifierFloat, "color": Color.AZURE,      "id": "mod_float", "input_type": "float"},
-	{"name": "Modif (Bool)",  "enum": SpellModifierBool,  "color": Color.AQUA,       "id": "mod_bool",  "input_type": "bool"},
-	{"name": "Modif (Int)",   "enum": SpellModifierInt,   "color": Color.AQUAMARINE, "id": "mod_int",   "input_type": "int"},
-	{"name": "Path",          "enum": SpellPath,          "color": Color.YELLOW,     "id": "path",      "input_type": "none"},
-	{"name": "Shape",         "enum": SpellShape,         "color": Color.ORANGE,     "id": "shape",     "input_type": "none"},
-	{"name": "Casting",       "enum": SpellCasting,       "color": Color.GREEN,      "id": "casting",   "input_type": "none"},
-	{"name": "Effect",        "enum": SpellEffect,        "color": Color.PURPLE,     "id": "effect",    "input_type": "none"},
-	{"name": "Trigger",       "enum": SpellTrigger,       "color": Color.WHITE,      "id": "trigger",   "input_type": "none"},
+	{"name": "Element",  "enum": SpellElement,  "color": Color.RED,              "id": "element",  "input_type": "none"},
+	{"name": "Modifier", "enum": null,          "color": Color(0.6, 0.85, 1.0),  "id": "modifier", "input_type": "modifier"},
+	{"name": "Path",     "enum": SpellPath,     "color": Color.YELLOW,           "id": "path",     "input_type": "none"},
+	{"name": "Shape",    "enum": SpellShape,    "color": Color.ORANGE,           "id": "shape",    "input_type": "none"},
+	{"name": "Casting",  "enum": SpellCasting,  "color": Color.GREEN,            "id": "casting",  "input_type": "none"},
+	{"name": "Effect",   "enum": SpellEffect,   "color": Color.PURPLE,           "id": "effect",   "input_type": "dynamic", "value_input_types": EFFECT_INPUT_TYPES},
+	{"name": "Trigger",  "enum": SpellTrigger,  "color": Color.WHITE,            "id": "trigger",  "input_type": "none"},
 ]
