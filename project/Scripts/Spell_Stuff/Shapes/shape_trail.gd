@@ -4,15 +4,17 @@ const TRAIL_INTERVAL: float = 0.15
 const TRAIL_LIFETIME: float = 1.2
 const TRAIL_RADIUS: float = 0.5
 
+var _timer: float = 0.0
+
 func _ready() -> void:
 	super()
-	_start_trail()
 
-func _start_trail() -> void:
-	while is_instance_valid(self):
-		await get_tree().create_timer(TRAIL_INTERVAL).timeout
-		if not is_instance_valid(self):
-			break
+func _physics_process(delta: float) -> void:
+	if not is_instance_valid(parent_spell):
+		return
+	_timer += delta
+	if _timer >= TRAIL_INTERVAL:
+		_timer -= TRAIL_INTERVAL
 		_spawn_trail_zone(global_position)
 
 func _spawn_trail_zone(pos: Vector3) -> void:

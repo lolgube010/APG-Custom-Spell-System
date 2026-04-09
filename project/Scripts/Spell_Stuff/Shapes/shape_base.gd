@@ -6,6 +6,26 @@ extends Area3D
 
 var parent_spell: SpellBase
 var _bounce_cooldown: bool = false
+var _hit_bodies: Array = []
+
+## Call in _ready() for shapes that persist and re-hit bodies on re-entry (AOE, Wall).
+func _init_persistent_zone() -> void:
+	body_exited.connect(func(body): _hit_bodies.erase(body))
+
+## Snap the parent spell to the ground and flatten its rotation. Safe to call
+## from _ready() (via await) or _physics_process.
+func _snap_to_ground() -> void:
+	var space := get_world_3d().direct_space_state
+	var from := parent_spell.global_position + Vector3.UP * 0.5
+	var query := PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 100.0)
+	query.collision_mask = 1
+	var result := space.intersect_ray(query)
+	if result:
+		parent_spell.global_position.y = result.position.y
+	var fwd := -parent_spell.global_transform.basis.z
+	var flat := Vector3(fwd.x, 0.0, fwd.z)
+	if flat.length_squared() > 0.001:
+		parent_spell.look_at(parent_spell.global_position + flat.normalized(), Vector3.UP)
 
 func _ready() -> void:
 	parent_spell = get_parent() as SpellBase

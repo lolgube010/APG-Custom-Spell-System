@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bkvxlxi7adoul"]
 
-[ext_resource type="Script" path="res://Scripts/training_dummy.gd" id="1_dummy"]
+[ext_resource type="Script" uid="uid://dvvk5e3sr3i0p" path="res://Scripts/training_dummy.gd" id="1_dummy"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dummy"]
 albedo_color = Color(0.78, 0.44, 0.18, 1)
@@ -15,13 +15,13 @@ height = 1.8
 radius = 0.38
 height = 1.8
 
-[node name="TrainingDummy" type="CharacterBody3D"]
+[node name="TrainingDummy" type="CharacterBody3D" unique_id=1141116077]
 script = ExtResource("1_dummy")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=917811032]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 mesh = SubResource("CapsuleMesh_dummy")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1103598003]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_dummy")
