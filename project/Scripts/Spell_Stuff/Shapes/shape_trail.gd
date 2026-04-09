@@ -54,8 +54,8 @@ func _on_body_entered(body: Node3D) -> void:
 		if parent_spell.is_environment_piercing:
 			return
 		parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
-		parent_spell.queue_free()
+		parent_spell.end_spell(global_transform)
 		return
 	parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
 	if not parent_spell.is_piercing:
-		parent_spell.queue_free()
+		parent_spell.end_spell(global_transform)

@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://d246smacn0anu"]
+
+[ext_resource type="Script" uid="uid://scone111111111" path="res://Scripts/Spell_Stuff/shape_cone.gd" id="1_cone"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_cone"]
+radius = 1.0
+
+[node name="ShapeCone" type="Area3D" unique_id=100000030]
+script = ExtResource("1_cone")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=100000032]
+shape = SubResource("SphereShape3D_cone")

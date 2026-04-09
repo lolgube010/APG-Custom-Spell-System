@@ -21,7 +21,7 @@ enum SpellEffect { Scale, MoveSpeed, SlowMo, Levitation, ThrowLook, Poison, Thor
 #types of amplifications for nodes
 enum SpellAmplification { Half, Double, Quad, Ten }
 #a trigger for when a spell will spawn another spell
-enum SpellTrigger { OnHit, OnEnd, OnTimer, OnCast, OnKill }
+enum SpellTrigger { OnHit, OnEnd, OnTimer, OnKill }
 
 const ELEMENT_COLORS: Dictionary = {
 	SpellElement.FIRE:      Color(1.0, 0.25, 0.0),
@@ -37,7 +37,6 @@ const SHAPE_SCENES: Dictionary = {
 	SpellShape.Explode:           preload("res://Scripts/Spell_Stuff/Shape_Explode.tscn"),
 	SpellShape.Cone:              preload("res://Scripts/Spell_Stuff/Shape_Cone.tscn"),
 	SpellShape.Wall:              preload("res://Scripts/Spell_Stuff/Shape_Wall.tscn"),
-	SpellShape.Deployable:        preload("res://Scripts/Spell_Stuff/Shape_Deployable.tscn"),
 	SpellShape.GravityProjectile: preload("res://Scripts/Spell_Stuff/Shape_GravityProjectile.tscn"),
 	SpellShape.Projectile:        preload("res://Scripts/Spell_Stuff/Shape_Projectile.tscn"),
 }
@@ -84,6 +83,13 @@ const EFFECT_INPUT_TYPES: Dictionary = {
 	9: {"type": "float", "default": 20.0},
 }
 
+const TRIGGER_INPUT_TYPES: Dictionary = {
+	0: {"type": "none",  "default": 0.0},  # OnHit
+	1: {"type": "none",  "default": 0.0},  # OnEnd
+	2: {"type": "float", "default": 1.0},  # OnTimer — interval in seconds
+	3: {"type": "none",  "default": 0.0},  # OnKill
+}
+
 const EFFECT_SCRIPTS: Dictionary = {
 	SpellEffect.Scale:        preload("res://Scripts/Spell_Stuff/Effects/effect_scale.gd"),
 	SpellEffect.MoveSpeed:    preload("res://Scripts/Spell_Stuff/Effects/effect_move_speed.gd"),
@@ -104,5 +110,5 @@ var attribute_configs = [
 	{"name": "Shape",    "enum": SpellShape,    "color": Color.ORANGE,           "id": "shape",    "input_type": "none"},
 	{"name": "Casting",  "enum": SpellCasting,  "color": Color.GREEN,            "id": "casting",  "input_type": "none"},
 	{"name": "Effect",   "enum": SpellEffect,   "color": Color.PURPLE,           "id": "effect",   "input_type": "dynamic", "value_input_types": EFFECT_INPUT_TYPES},
-	{"name": "Trigger",  "enum": SpellTrigger,  "color": Color.WHITE,            "id": "trigger",  "input_type": "none"},
+	{"name": "Trigger",  "enum": SpellTrigger,  "color": Color.WHITE,            "id": "trigger",  "input_type": "dynamic", "value_input_types": TRIGGER_INPUT_TYPES},
 ]

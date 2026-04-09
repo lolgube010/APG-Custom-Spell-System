@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://cm3bbvuin6hxd"]
+
+[ext_resource type="ArrayMesh" uid="uid://5x7s4eldpm4p" path="res://Resources/laser beam vfx/projectile_lazer_beam_mesh_Cylinder_001.res" id="1_6ma63"]
+[ext_resource type="Shader" uid="uid://6vi0a3kg0srx" path="res://Resources/laser beam vfx/laser_beam.tres" id="1_sjwdg"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_idqdv"]
+render_priority = 0
+shader = ExtResource("1_sjwdg")
+
+[sub_resource type="Curve" id="Curve_6ma63"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Curve" id="Curve_sjwdg"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Curve" id="Curve_idqdv"]
+_limits = [0.0, 8.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(1, 8), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveXYZTexture" id="CurveXYZTexture_l6547"]
+curve_x = SubResource("Curve_6ma63")
+curve_y = SubResource("Curve_sjwdg")
+curve_z = SubResource("Curve_idqdv")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_sjp1x"]
+gravity = Vector3(0, 0, 0)
+scale_curve = SubResource("CurveXYZTexture_l6547")
+color = Color(0.99505013, 0.6705576, 0, 1)
+
+[node name="LaserBeam" type="Node3D" unique_id=1044776387]
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="." unique_id=211495737]
+material_override = SubResource("ShaderMaterial_idqdv")
+amount = 1
+process_material = SubResource("ParticleProcessMaterial_sjp1x")
+draw_pass_1 = ExtResource("1_6ma63")

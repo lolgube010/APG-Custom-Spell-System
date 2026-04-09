@@ -27,6 +27,6 @@ func _physics_process(delta: float) -> void:
 	else:
 		var to_origin := spawn_position - parent_spell.global_position
 		if to_origin.length() < 0.5:
-			parent_spell.queue_free()
+			parent_spell.end_spell(parent_spell.global_transform)
 			return
 		parent_spell.global_position += to_origin.normalized() * parent_spell.speed * delta

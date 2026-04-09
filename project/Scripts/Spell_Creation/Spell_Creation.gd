@@ -19,20 +19,6 @@ func _ready() -> void:
 	start_node.position_offset = Vector2(50, 200)
 	$GraphEdit.add_child(start_node)
 
-	# Add Spell Ref button
-	var btn_ref := Button.new()
-	btn_ref.text = "Add Spell Ref"
-	btn_ref.pressed.connect(_on_add_spell_ref_pressed)
-	$HBoxContainer.add_child(btn_ref)
-	$HBoxContainer.move_child(btn_ref, nodeCountText.get_index())
-
-	# Save to Library button
-	var btn_lib := Button.new()
-	btn_lib.text = "Save to Library"
-	btn_lib.pressed.connect(_on_save_to_library_pressed)
-	$HBoxContainer.add_child(btn_lib)
-	$HBoxContainer.move_child(btn_lib, nodeCountText.get_index())
-
 	# Build the library panel (top-right corner)
 	_build_library_panel()
 	
@@ -73,6 +59,19 @@ func _build_library_panel() -> void:
 	title.text = "Spell Library"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
+
+	var btn_row := HBoxContainer.new()
+	var btn_ref := Button.new()
+	btn_ref.text = "Add Spell Ref"
+	btn_ref.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_ref.pressed.connect(_on_add_spell_ref_pressed)
+	btn_row.add_child(btn_ref)
+	var btn_lib := Button.new()
+	btn_lib.text = "Save to Library"
+	btn_lib.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_lib.pressed.connect(_on_save_to_library_pressed)
+	btn_row.add_child(btn_lib)
+	vbox.add_child(btn_row)
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL

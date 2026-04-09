@@ -60,11 +60,15 @@ func _on_spell_creation_spell_data_created(spell_array: Array) -> void:
 	print("spell_casting.gd cached spell creation data!!!")
 	our_spell_array = spell_array
 
+	# Flatten spell_refs so casting type / cast speed nested inside them are visible.
+	# Also reset casting type so a stale value from a previous spell can't carry over.
+	var flat := _flatten_spell_refs(spell_array)
+	current_casting_type = -1
 	current_cast_speed = 1.0
-	for component in spell_array:
+	for component in flat:
 		if component["type"] == "casting":
-			current_casting_type = component["value"]
-		elif component["type"] == "mod_float" and component["value"] == SpellGlobals.SpellModifierFloat.CastSpeed:
+			current_casting_type = int(component["value"])
+		elif component["type"] == "mod_float" and int(component["value"]) == SpellGlobals.SpellModifierFloat.CastSpeed:
 			current_cast_speed = maxf(0.1, component.get("amount", 1.0))
 
 	wand.cast_speed = current_cast_speed
@@ -123,8 +127,8 @@ func _schedule_spell(spawn_transform: Transform3D, charge_multiplier: float = 0.
 		_spawn_spell_object(rotated, charge_multiplier)
 
 func _get_split_count() -> int:
-	for component in our_spell_array:
-		if component["type"] == "mod_int" and component["value"] == SpellGlobals.SpellModifierInt.Split:
+	for component in _flatten_spell_refs(our_spell_array):
+		if component["type"] == "mod_int" and int(component["value"]) == SpellGlobals.SpellModifierInt.Split:
 			return maxi(1, component.get("amount", 1))
 	return 1
 
@@ -138,14 +142,14 @@ func _apply_effect_amount(node: Node, component: Dictionary) -> void:
 		node.set("amount", float(raw))
 
 func _get_duration_mult() -> float:
-	for component in our_spell_array:
-		if component["type"] == "mod_float" and component["value"] == SpellGlobals.SpellModifierFloat.Duration:
+	for component in _flatten_spell_refs(our_spell_array):
+		if component["type"] == "mod_float" and int(component["value"]) == SpellGlobals.SpellModifierFloat.Duration:
 			return maxf(0.1, component.get("amount", 1.0))
 	return 1.0
 
 func _get_cast_delay() -> float:
-	for component in our_spell_array:
-		if component["type"] == "mod_float" and component["value"] == SpellGlobals.SpellModifierFloat.Delay:
+	for component in _flatten_spell_refs(our_spell_array):
+		if component["type"] == "mod_float" and int(component["value"]) == SpellGlobals.SpellModifierFloat.Delay:
 			return component.get("amount", DEFAULT_CAST_DELAY)
 	return 0.0
 
@@ -254,9 +258,23 @@ func _on_fire_rate_timeout() -> void:
 	if wand:
 		_schedule_spell(wand.get_spell_spawn_transform())
 
+func _flatten_spell_refs(arr: Array) -> Array:
+	var result: Array = []
+	for entry in arr:
+		if entry["type"] == "spell_ref":
+			var ref_array := SpellLibrary.get_spell(entry["name"])
+			if not ref_array.is_empty():
+				result.append_array(ref_array)
+		else:
+			result.append(entry)
+	return result
+
 func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float = 0.0, spell_array: Array = []) -> Node3D:
 	if spell_array.is_empty():
 		spell_array = our_spell_array
+
+	# Expand any spell_ref entries so both passes see a flat component list
+	spell_array = _flatten_spell_refs(spell_array)
 
 	var new_spell = SpellBase.new()
 	new_spell.name = "ActiveSpell"
@@ -300,30 +318,31 @@ func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float 
 						new_spell.has_trail = amount
 
 	# Second pass: attach shape, path, element, trigger, and spell_ref components
+	# Values from JSON are floats (0.0 instead of 0); cast to int so dict lookups
+	# using enum keys work correctly (Godot 4 hashes int and float differently).
 	var has_shape := false
 	for component in spell_array:
 		match component["type"]:
 			"shape":
-				if SpellGlobals.SHAPE_SCENES.has(component["value"]):
-					new_spell.add_child(SpellGlobals.SHAPE_SCENES[component["value"]].instantiate())
+				var sv := int(component["value"])
+				if SpellGlobals.SHAPE_SCENES.has(sv):
+					new_spell.add_child(SpellGlobals.SHAPE_SCENES[sv].instantiate())
 					has_shape = true
 			"path":
-				if SpellGlobals.PATH_SCRIPTS.has(component["value"]):
+				var pv := int(component["value"])
+				if SpellGlobals.PATH_SCRIPTS.has(pv):
 					var path_node = Node.new()
-					path_node.set_script(SpellGlobals.PATH_SCRIPTS[component["value"]])
+					path_node.set_script(SpellGlobals.PATH_SCRIPTS[pv])
 					new_spell.add_child(path_node)
 			"element":
-				new_spell.element = component["value"]
+				new_spell.element = int(component["value"])
 			"trigger":
-				new_spell.trigger_type = component["value"]
+				new_spell.trigger_type = int(component["value"])
 				new_spell.child_spell_array = component.get("child_spell", [])
 				new_spell.spawn_child = func(child_arr: Array, xform: Transform3D):
 					_spawn_spell_object(xform, 0.0, child_arr)
-			"spell_ref":
-				# Spawn the referenced spell as a fully independent SpellBase
-				var ref_array := SpellLibrary.get_spell(component["name"])
-				if not ref_array.is_empty():
-					_spawn_spell_object(spawn_transform, charge_multiplier, ref_array)
+				if int(component["value"]) == SpellGlobals.SpellTrigger.OnTimer:
+					new_spell.timer_trigger_interval = maxf(0.1, component.get("amount", 1.0))
 
 	# Don't add an invisible ghost container if no shape was attached
 	if not has_shape:

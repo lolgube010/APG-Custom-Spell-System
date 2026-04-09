@@ -3,15 +3,16 @@
 [ext_resource type="Script" uid="uid://sexpl111111111" path="res://Scripts/Spell_Stuff/shape_explode.gd" id="1_expl"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_expl"]
-albedo_color = Color(1.0, 0.4, 0.0, 1)
+albedo_color = Color(1.0, 0.4, 0.0, 0.8)
+transparency = 1
 
 [sub_resource type="SphereMesh" id="SphereMesh_expl"]
 material = SubResource("StandardMaterial3D_expl")
-radius = 3.0
-height = 6.0
+radius = 5.0
+height = 10.0
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_expl"]
-radius = 3.0
+radius = 5.0
 
 [node name="ShapeExplode" type="Area3D" unique_id=100000020]
 script = ExtResource("1_expl")
