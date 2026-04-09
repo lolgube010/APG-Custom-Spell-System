@@ -3,8 +3,9 @@ extends Node
 @export var player_root: Node3D
 var wand : Node
 # State tracking
-var our_spell_array : Array
-var current_casting_type: int = -1 # We will cache this when equipped!
+var our_spell_array: Array          # raw compiled array (may contain spell_ref entries)
+var _flat_spell_array: Array        # pre-flattened; always kept in sync with our_spell_array
+var current_casting_type: int = -1
 
 # Continuous variables
 const BASE_FIRE_RATE: float = 0.2  # seconds between shots at cast_speed 1.0
@@ -59,13 +60,11 @@ func _on_spell_creation_spell_data_created(spell_array: Array) -> void:
 		return
 	print("spell_casting.gd cached spell creation data!!!")
 	our_spell_array = spell_array
+	_flat_spell_array = _flatten_spell_refs(spell_array)
 
-	# Flatten spell_refs so casting type / cast speed nested inside them are visible.
-	# Also reset casting type so a stale value from a previous spell can't carry over.
-	var flat := _flatten_spell_refs(spell_array)
 	current_casting_type = -1
 	current_cast_speed = 1.0
-	for component in flat:
+	for component in _flat_spell_array:
 		if component["type"] == "casting":
 			current_casting_type = int(component["value"])
 		elif component["type"] == "mod_float" and int(component["value"]) == SpellGlobals.SpellModifierFloat.CastSpeed:
@@ -127,7 +126,7 @@ func _schedule_spell(spawn_transform: Transform3D, charge_multiplier: float = 0.
 		_spawn_spell_object(rotated, charge_multiplier)
 
 func _get_split_count() -> int:
-	for component in _flatten_spell_refs(our_spell_array):
+	for component in _flat_spell_array:
 		if component["type"] == "mod_int" and int(component["value"]) == SpellGlobals.SpellModifierInt.Split:
 			return maxi(1, component.get("amount", 1))
 	return 1
@@ -142,19 +141,19 @@ func _apply_effect_amount(node: Node, component: Dictionary) -> void:
 		node.set("amount", float(raw))
 
 func _get_duration_mult() -> float:
-	for component in _flatten_spell_refs(our_spell_array):
+	for component in _flat_spell_array:
 		if component["type"] == "mod_float" and int(component["value"]) == SpellGlobals.SpellModifierFloat.Duration:
 			return maxf(0.1, component.get("amount", 1.0))
 	return 1.0
 
 func _get_cast_delay() -> float:
-	for component in _flatten_spell_refs(our_spell_array):
+	for component in _flat_spell_array:
 		if component["type"] == "mod_float" and int(component["value"]) == SpellGlobals.SpellModifierFloat.Delay:
 			return component.get("amount", DEFAULT_CAST_DELAY)
 	return 0.0
 
 func _apply_self_effects(is_toggle: bool) -> void:
-	for component in our_spell_array:
+	for component in _flat_spell_array:
 		if component["type"] != "effect":
 			continue
 		var effect_value: int = component["value"]
@@ -192,7 +191,7 @@ func _apply_self_effects(is_toggle: bool) -> void:
 func _apply_hold_effects() -> void:
 	if not _active_hold_effects.is_empty():
 		return  # already holding — avoid re-entry from looping animation
-	for component in our_spell_array:
+	for component in _flat_spell_array:
 		if component["type"] != "effect":
 			continue
 		var effect_value: int = component["value"]
@@ -238,7 +237,7 @@ func _on_toggle_repeat_timeout() -> void:
 			active_toggle_effects[effect_value] = node
 
 func _find_effect_component(effect_value: int) -> Dictionary:
-	for component in our_spell_array:
+	for component in _flat_spell_array:
 		if component["type"] == "effect" and component["value"] == effect_value:
 			return component
 	return {}

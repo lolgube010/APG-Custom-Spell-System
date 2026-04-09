@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://btp1ucn2tyvu1"]
 
-[ext_resource type="Script" uid="uid://stral111111111" path="res://Scripts/Spell_Stuff/shape_trail.gd" id="1_tral"]
+[ext_resource type="Script" path="res://Scripts/Spell_Stuff/Shapes/shape_trail.gd" id="1_tral"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tral"]
 albedo_color = Color(1.0, 0.2, 0.8, 1)

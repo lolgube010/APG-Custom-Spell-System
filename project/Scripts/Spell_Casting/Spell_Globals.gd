@@ -13,7 +13,7 @@ enum SpellModifierBool { Piercing, Ricochet, EnvironmentPiercing, Trail }
 #changes the path of the spell takes when moving
 enum SpellPath { LineOfSight, CurvePath, SigZagLineOfSight, Upwards, Homing, Boomerang}
 #decides what shape the spell will take
-enum SpellShape { Orb, AOE, Beam, Explode, Cone, Wall, Deployable, GravityProjectile, Projectile }
+enum SpellShape { Orb, AOE, Beam, Explode, Cone, Wall, GravityProjectile, Projectile }
 #decides how the spell is cast
 enum SpellCasting { Burst, Continous, SelfInstant, SelfToggle, ChargeUp, SelfHold }
 #decides the effect the spell will have when hitting a target
@@ -31,14 +31,14 @@ const ELEMENT_COLORS: Dictionary = {
 }
 
 const SHAPE_SCENES: Dictionary = {
-	SpellShape.Orb:               preload("res://Scripts/Spell_Stuff/Shape_Orb.tscn"),
-	SpellShape.AOE:               preload("res://Scripts/Spell_Stuff/Shape_AOE.tscn"),
-	SpellShape.Beam:              preload("res://Scripts/Spell_Stuff/Shape_Beam.tscn"),
-	SpellShape.Explode:           preload("res://Scripts/Spell_Stuff/Shape_Explode.tscn"),
-	SpellShape.Cone:              preload("res://Scripts/Spell_Stuff/Shape_Cone.tscn"),
-	SpellShape.Wall:              preload("res://Scripts/Spell_Stuff/Shape_Wall.tscn"),
-	SpellShape.GravityProjectile: preload("res://Scripts/Spell_Stuff/Shape_GravityProjectile.tscn"),
-	SpellShape.Projectile:        preload("res://Scripts/Spell_Stuff/Shape_Projectile.tscn"),
+	SpellShape.Orb:               preload("res://Scripts/Spell_Stuff/Shapes/Shape_Orb.tscn"),
+	SpellShape.AOE:               preload("res://Scripts/Spell_Stuff/Shapes/Shape_AOE.tscn"),
+	SpellShape.Beam:              preload("res://Scripts/Spell_Stuff/Shapes/Shape_Beam.tscn"),
+	SpellShape.Explode:           preload("res://Scripts/Spell_Stuff/Shapes/Shape_Explode.tscn"),
+	SpellShape.Cone:              preload("res://Scripts/Spell_Stuff/Shapes/Shape_Cone.tscn"),
+	SpellShape.Wall:              preload("res://Scripts/Spell_Stuff/Shapes/Shape_Wall.tscn"),
+	SpellShape.GravityProjectile: preload("res://Scripts/Spell_Stuff/Shapes/Shape_GravityProjectile.tscn"),
+	SpellShape.Projectile:        preload("res://Scripts/Spell_Stuff/Shapes/Shape_Projectile.tscn"),
 }
 
 const PATH_SCRIPTS: Dictionary = {

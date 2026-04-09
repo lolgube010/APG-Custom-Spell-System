@@ -244,12 +244,12 @@ func get_data_for_port(port_index: int) -> Dictionary:
 	# Modifier row: type and value come from the selected MODIFIER_ITEMS entry
 	if input_type == "modifier":
 		var item = SpellGlobals.MODIFIER_ITEMS[dropdown.selected]
-		var data = {"type": item["spell_type"], "value": item["spell_value"]}
+		var mod_data = {"type": item["spell_type"], "value": item["spell_value"]}
 		var dyn := row.get_child(2) as HBoxContainer
 		var amount = _read_container_amount(dyn, item["widget_type"])
 		if amount != null:
-			data["amount"] = amount
-		return data
+			mod_data["amount"] = amount
+		return mod_data
 
 	var data = {"type": config["id"], "value": dropdown.get_selected_id()}
 	match input_type:

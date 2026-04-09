@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://d246smacn0anu"]
 
-[ext_resource type="Script" uid="uid://scone111111111" path="res://Scripts/Spell_Stuff/shape_cone.gd" id="1_cone"]
+[ext_resource type="Script" path="res://Scripts/Spell_Stuff/Shapes/shape_cone.gd" id="1_cone"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_cone"]
 radius = 1.0

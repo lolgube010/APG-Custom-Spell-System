@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://chsi7kc23sev3"]
 
-[ext_resource type="Script" uid="uid://sexpl111111111" path="res://Scripts/Spell_Stuff/shape_explode.gd" id="1_expl"]
+[ext_resource type="Script" path="res://Scripts/Spell_Stuff/Shapes/shape_explode.gd" id="1_expl"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_expl"]
 albedo_color = Color(1.0, 0.4, 0.0, 0.8)

@@ -11,14 +11,14 @@ func _ready() -> void:
 	_load()
 
 func save_spell(array: Array) -> String:
-	var name := _next_name()
-	_library[name] = array
+	var savedSpellName := _next_name()
+	_library[savedSpellName] = array
 	_persist()
 	library_changed.emit()
-	return name
+	return savedSpellName
 
-func delete_spell(name: String) -> void:
-	_library.erase(name)
+func delete_spell(savedSpellName: String) -> void:
+	_library.erase(savedSpellName)
 	_persist()
 	library_changed.emit()
 
@@ -33,8 +33,8 @@ func rename_spell(old_name: String, new_name: String) -> void:
 	_persist()
 	library_changed.emit()
 
-func get_spell(name: String) -> Array:
-	return _library.get(name, [])
+func get_spell(spellName: String) -> Array:
+	return _library.get(spellName, [])
 
 func get_all_names() -> Array:
 	return _library.keys()

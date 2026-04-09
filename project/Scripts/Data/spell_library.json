@@ -1,26 +1,3 @@
 {
-	"Spell_1": [
-		{
-			"type": "casting",
-			"value": 0.0
-		},
-		{
-			"type": "shape",
-			"value": 0.0
-		},
-		{
-			"type": "path",
-			"value": 0.0
-		}
-	],
-	"Spell_2": [
-		{
-			"type": "casting",
-			"value": 0.0
-		},
-		{
-			"type": "shape",
-			"value": 3.0
-		}
-	]
+
 }

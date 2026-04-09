@@ -12,7 +12,7 @@ func _ready() -> void:
 	super()
 	# Disconnect the inherited body_entered — we poll via get_overlapping_bodies on detonate
 	body_entered.disconnect(_on_body_entered)
-	scale = Vector3.ZERO
+	scale = Vector3.ONE * 0.001  # Vector3.ZERO → det==0 which crashes Basis invert
 
 func _physics_process(delta: float) -> void:
 	if _detonated:

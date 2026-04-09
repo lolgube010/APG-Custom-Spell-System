@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://crrfsmacn0anu"]
 
-[ext_resource type="Script" uid="uid://sbeam111111111" path="res://Scripts/Spell_Stuff/shape_beam.gd" id="1_beam"]
+[ext_resource type="Script" path="res://Scripts/Spell_Stuff/Shapes/shape_beam.gd" id="1_beam"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_beam"]
 albedo_color = Color(0.2, 0.5, 1.0, 1)

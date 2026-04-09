@@ -285,7 +285,7 @@ func _on_graph_edit_connection_request(from_node: StringName, from_port: int, to
 	$GraphEdit.connect_node(from_node, from_port, to_node, to_port)
 	broadcast_spell_update()
 	
-func _on_graph_edit_connection_to_empty(from_node: StringName, from_port: int, release_position: Vector2) -> void:
+func _on_graph_edit_connection_to_empty(from_node: StringName, from_port: int, _release_position: Vector2) -> void:
 	# Loop through all active connections in the GraphEdit
 	for conn in $GraphEdit.get_connection_list():
 		# Check if this connection starts at the exact node and port we just dragged from
@@ -294,7 +294,7 @@ func _on_graph_edit_connection_to_empty(from_node: StringName, from_port: int, r
 			$GraphEdit.disconnect_node(conn["from_node"], conn["from_port"], conn["to_node"], conn["to_port"])
 	broadcast_spell_update()
 
-func _on_graph_edit_connection_from_empty(to_node: StringName, to_port: int, release_position: Vector2) -> void:
+func _on_graph_edit_connection_from_empty(to_node: StringName, to_port: int, _release_position: Vector2) -> void:
 	for conn in $GraphEdit.get_connection_list():
 		# This time we check the destination side of the wire
 		if conn["to_node"] == to_node and conn["to_port"] == to_port:
