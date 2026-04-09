@@ -1,8 +1,8 @@
 extends Control
 
-var simpleGraphNode = load("res://Scripts/Spell_Creation/Scenes/graph_node.tscn")
-var startGraphNode  = load("res://Scripts/Spell_Creation/Scenes/start_node.tscn")
-var spellRefNode    = load("res://Scripts/Spell_Creation/Scenes/spell_ref_node.tscn")
+const simpleGraphNode = preload("res://Scripts/Spell_Creation/Scenes/graph_node.tscn")
+const startGraphNode  = preload("res://Scripts/Spell_Creation/Scenes/start_node.tscn")
+const spellRefNode    = preload("res://Scripts/Spell_Creation/Scenes/spell_ref_node.tscn")
 var nodeCount = 0
 @onready var nodeCountText = $HBoxContainer/Label
 @export var player_root: Node3D

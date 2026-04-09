@@ -1,39 +1,64 @@
 extends CharacterBody3D
 
 const MAX_HP: float = 100.0
+const RESPAWN_TIME: float = 3.0
 
 var hp: float = MAX_HP
 var _mesh_mat: StandardMaterial3D
+var _is_dead: bool = false
 
 func _ready() -> void:
 	add_to_group("enemies")
-	# Grab a duplicate of the mesh material so we can flash it on hit
 	var mi := get_node_or_null("MeshInstance3D") as MeshInstance3D
 	if mi and mi.get_active_material(0):
 		_mesh_mat = mi.get_active_material(0).duplicate()
 		mi.material_override = _mesh_mat
 
-func take_damage(amount: float) -> void:
+## Returns true if this hit killed the dummy (for OnKill trigger support).
+func take_damage(amount: float) -> bool:
+	if _is_dead:
+		return false
 	hp = maxf(0.0, hp - amount)
 	_spawn_damage_label(amount)
 	_flash_hit()
 	if hp <= 0.0:
 		_on_death()
+		return true
+	return false
 
 func _on_death() -> void:
+	_is_dead = true
+	remove_from_group("enemies")
+	var mi := get_node_or_null("MeshInstance3D") as MeshInstance3D
+	if mi:
+		mi.visible = false
+	var col := get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if col:
+		col.set_deferred("disabled", true)
+	get_tree().create_timer(RESPAWN_TIME).timeout.connect(_respawn)
+
+func _respawn() -> void:
 	hp = MAX_HP
-	if is_instance_valid(_mesh_mat):
-		# Flash white on death reset
-		_mesh_mat.albedo_color = Color.WHITE
-		await get_tree().create_timer(0.15).timeout
-		_mesh_mat.albedo_color = Color(0.78, 0.44, 0.18)
+	_is_dead = false
+	add_to_group("enemies")
+	var col := get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if col:
+		col.set_deferred("disabled", false)
+	var mi := get_node_or_null("MeshInstance3D") as MeshInstance3D
+	if mi:
+		mi.visible = true
+		if is_instance_valid(_mesh_mat):
+			_mesh_mat.albedo_color = Color.WHITE
+			await get_tree().create_timer(0.2).timeout
+			if is_instance_valid(_mesh_mat):
+				_mesh_mat.albedo_color = Color(0.78, 0.44, 0.18)
 
 func _flash_hit() -> void:
-	if not is_instance_valid(_mesh_mat):
+	if not is_instance_valid(_mesh_mat) or _is_dead:
 		return
 	_mesh_mat.albedo_color = Color(1.0, 0.6, 0.2)
 	await get_tree().create_timer(0.08).timeout
-	if is_instance_valid(_mesh_mat):
+	if is_instance_valid(_mesh_mat) and not _is_dead:
 		_mesh_mat.albedo_color = Color(0.78, 0.44, 0.18)
 
 func _spawn_damage_label(amount: float) -> void:

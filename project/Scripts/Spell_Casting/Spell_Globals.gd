@@ -1,26 +1,14 @@
 extends Node
 
-# element
-enum SpellElement { FIRE, ICE, LIGHTNING, ARCANE }
-#spell modifiers that are vectors
-enum SpellModifierVec { Size }
-#spell modifiers that are floats
+enum SpellElement     { FIRE, ICE, LIGHTNING, ARCANE }
 enum SpellModifierFloat { CastSpeed, MoveSpeed, Duration, CastForce, Delay }
-#spell modifiers that are integeers
-enum SpellModifierInt { Split }
-#spell modifiers that are boolean
-enum SpellModifierBool { Piercing, Ricochet, EnvironmentPiercing, Trail }
-#changes the path of the spell takes when moving
-enum SpellPath { LineOfSight, CurvePath, SigZagLineOfSight, Upwards, Homing, Boomerang}
-#decides what shape the spell will take
-enum SpellShape { Orb, AOE, Beam, Explode, Cone, Wall, GravityProjectile, Projectile }
-#decides how the spell is cast
+enum SpellModifierInt   { Split }
+enum SpellModifierVec   { Size }
+enum SpellModifierBool  { Piercing, Ricochet, EnvironmentPiercing, Trail }
+enum SpellPath    { LineOfSight, CurvePath, SigZagLineOfSight, Upwards, Homing, Boomerang }
+enum SpellShape   { Orb, AOE, Beam, Explode, Cone, Wall, GravityProjectile, Projectile }
 enum SpellCasting { Burst, Continous, SelfInstant, SelfToggle, ChargeUp, SelfHold }
-#decides the effect the spell will have when hitting a target
-enum SpellEffect { Scale, MoveSpeed, SlowMo, Levitation, ThrowLook, Poison, Thorns, Invincibilty, Gravity, ThrowRandom, RandomTeleport, TeleportToHit }
-#types of amplifications for nodes
-enum SpellAmplification { Half, Double, Quad, Ten }
-#a trigger for when a spell will spawn another spell
+enum SpellEffect  { Scale, MoveSpeed, SlowMo, Levitation, ThrowLook, Poison, Thorns, Invincibilty, Gravity, ThrowRandom, RandomTeleport, TeleportToHit }
 enum SpellTrigger { OnHit, OnEnd, OnTimer, OnKill }
 
 const ELEMENT_COLORS: Dictionary = {
@@ -50,12 +38,8 @@ const PATH_SCRIPTS: Dictionary = {
 	SpellPath.Boomerang:         preload("res://Scripts/Spell_Stuff/Paths/path_boomerang.gd"),
 }
 
-# Maps SpellEffect integer value → {type, default} for graph node input widgets.
-# Integer keys are used because enum values can't be const dict keys in other files.
-# Order matches SpellEffect enum: Scale=0 MoveSpeed=1 SlowMo=2 Levitation=3 ThrowLook=4
-#                                 Poison=5 Thorns=6 Invincibilty=7 Gravity=8 ThrowRandom=9
-# Flat list of every modifier, each with its spell-array type/value and widget metadata.
-# Used to populate the single combined Modifier row in the graph node.
+# Flat list of every modifier with its spell-array type/value and graph widget metadata.
+# Used to populate the combined Modifier row in the graph node.
 const MODIFIER_ITEMS: Array = [
 	{"label": "Cast Speed",   "spell_type": "mod_float", "spell_value": 0, "widget_type": "float", "default": 1.0},
 	{"label": "Move Speed",   "spell_type": "mod_float", "spell_value": 1, "widget_type": "float", "default": 1.0},
@@ -70,6 +54,8 @@ const MODIFIER_ITEMS: Array = [
 	{"label": "Trail",        "spell_type": "mod_bool",  "spell_value": 3, "widget_type": "bool",  "default": false},
 ]
 
+# Maps SpellEffect enum value (int key) → {type, default} for graph node input widgets.
+# Integer keys because enum values are not compile-time constants outside this file.
 const EFFECT_INPUT_TYPES: Dictionary = {
 	0: {"type": "vec",   "default": 2.0},
 	1: {"type": "float", "default": 2.0},
@@ -93,18 +79,18 @@ const TRIGGER_INPUT_TYPES: Dictionary = {
 }
 
 const EFFECT_SCRIPTS: Dictionary = {
-	SpellEffect.Scale:        preload("res://Scripts/Spell_Stuff/Effects/effect_scale.gd"),
-	SpellEffect.MoveSpeed:    preload("res://Scripts/Spell_Stuff/Effects/effect_move_speed.gd"),
-	SpellEffect.SlowMo:       preload("res://Scripts/Spell_Stuff/Effects/effect_slow_mo.gd"),
-	SpellEffect.Levitation:   preload("res://Scripts/Spell_Stuff/Effects/effect_levitation.gd"),
-	SpellEffect.ThrowLook:    preload("res://Scripts/Spell_Stuff/Effects/effect_throw_look.gd"),
-	SpellEffect.Poison:       preload("res://Scripts/Spell_Stuff/Effects/effect_poison.gd"),
-	SpellEffect.Thorns:       preload("res://Scripts/Spell_Stuff/Effects/effect_thorns.gd"),
-	SpellEffect.Invincibilty: preload("res://Scripts/Spell_Stuff/Effects/effect_invincibility.gd"),
-	SpellEffect.Gravity:      preload("res://Scripts/Spell_Stuff/Effects/effect_gravity.gd"),
-	SpellEffect.ThrowRandom:      preload("res://Scripts/Spell_Stuff/Effects/effect_throw_random.gd"),
-	SpellEffect.RandomTeleport:   preload("res://Scripts/Spell_Stuff/Effects/effect_random_teleport.gd"),
-	SpellEffect.TeleportToHit:    preload("res://Scripts/Spell_Stuff/Effects/effect_teleport_to_hit.gd"),
+	SpellEffect.Scale:          preload("res://Scripts/Spell_Stuff/Effects/effect_scale.gd"),
+	SpellEffect.MoveSpeed:      preload("res://Scripts/Spell_Stuff/Effects/effect_move_speed.gd"),
+	SpellEffect.SlowMo:         preload("res://Scripts/Spell_Stuff/Effects/effect_slow_mo.gd"),
+	SpellEffect.Levitation:     preload("res://Scripts/Spell_Stuff/Effects/effect_levitation.gd"),
+	SpellEffect.ThrowLook:      preload("res://Scripts/Spell_Stuff/Effects/effect_throw_look.gd"),
+	SpellEffect.Poison:         preload("res://Scripts/Spell_Stuff/Effects/effect_poison.gd"),
+	SpellEffect.Thorns:         preload("res://Scripts/Spell_Stuff/Effects/effect_thorns.gd"),
+	SpellEffect.Invincibilty:   preload("res://Scripts/Spell_Stuff/Effects/effect_invincibility.gd"),
+	SpellEffect.Gravity:        preload("res://Scripts/Spell_Stuff/Effects/effect_gravity.gd"),
+	SpellEffect.ThrowRandom:    preload("res://Scripts/Spell_Stuff/Effects/effect_throw_random.gd"),
+	SpellEffect.RandomTeleport: preload("res://Scripts/Spell_Stuff/Effects/effect_random_teleport.gd"),
+	SpellEffect.TeleportToHit:  preload("res://Scripts/Spell_Stuff/Effects/effect_teleport_to_hit.gd"),
 }
 
 var attribute_configs = [

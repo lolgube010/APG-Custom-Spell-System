@@ -1,29 +1,24 @@
 extends Node3D
 class_name SpellBase
 
-# We store basic stats here so modifiers (like Speed * 2) can easily find and change them
-var element: int = -1 # -1 means none
-var current_path: int = -1
+var element: int = -1
 var damage: float = 10.0
 var speed: float = 10.0
+var cast_force: float = 1.0
 var scale_mult: Vector3 = Vector3.ONE
-var split_count: int = 0
+var lifetime: float = 5.0
 var is_piercing: bool = false
 var does_ricochet: bool = false
 var is_environment_piercing: bool = false
 var has_trail: bool = false
 
-var lifetime: float = 5.0
 var _ended: bool = false
 
 # Trigger / child spell
-var trigger_type: int = -1          # SpellTrigger enum value, -1 = no trigger
-var timer_trigger_interval: float = 0.0  # used when trigger_type == OnTimer
-var child_spell_array: Array = []   # compiled sub-array to spawn when trigger fires
-var spawn_child: Callable           # set by Spell_Casting: call(child_array, transform)
-
-# Arrays to hold effects that haven't been applied to a shape yet
-var pending_effects: Array[int] = []
+var trigger_type: int = -1
+var timer_trigger_interval: float = 0.0
+var child_spell_array: Array = []
+var spawn_child: Callable
 
 func _ready() -> void:
 	if trigger_type == SpellGlobals.SpellTrigger.OnTimer and timer_trigger_interval > 0.0:
@@ -31,8 +26,8 @@ func _ready() -> void:
 	await get_tree().create_timer(lifetime).timeout
 	end_spell(global_transform)
 
-## Call this instead of queue_free() everywhere — fires OnEnd then destroys the spell.
-## The _ended guard ensures it can only run once even if called from multiple paths.
+## Call instead of queue_free() — fires the OnEnd trigger first, then destroys.
+## The _ended guard ensures it can only run once even if called from multiple places.
 func end_spell(xform: Transform3D) -> void:
 	if _ended:
 		return

@@ -2,13 +2,14 @@ extends ShapeBase
 
 ## Valorant-style wall: a tall barrier that extends forward from the cast point,
 ## standing vertically on the ground. Stationary regardless of path.
-## Damages anything that walks through it (once per body).
+## Damages anything that walks through it (once per pass — re-entering deals damage again).
 
 var _hit_bodies: Array = []
 
 func _ready() -> void:
 	super()
 	_place_on_ground()
+	body_exited.connect(func(body): _hit_bodies.erase(body))
 
 func _place_on_ground() -> void:
 	await get_tree().process_frame
@@ -32,7 +33,5 @@ func _on_body_entered(body: Node3D) -> void:
 	if body is StaticBody3D or _hit_bodies.has(body):
 		return
 	_hit_bodies.append(body)
-	if body.has_method("take_damage"):
-		body.take_damage(parent_spell.damage)
-	parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
+	_damage_body(body, global_transform)
 	# Wall persists — does not destroy on hit

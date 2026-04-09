@@ -18,7 +18,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if not _initialized:
 		# Lazy init: global_transform is guaranteed set by the first physics tick
-		_velocity = -parent_spell.global_transform.basis.z * parent_spell.speed
+		_velocity = -parent_spell.global_transform.basis.z * parent_spell.speed * parent_spell.cast_force
 		_initialized = true
 
 	_velocity.y -= GRAVITY * delta

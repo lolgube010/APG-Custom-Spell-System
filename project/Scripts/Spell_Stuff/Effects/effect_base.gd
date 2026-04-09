@@ -1,16 +1,19 @@
 class_name EffectBase
 extends Node
 
-var player_root
-var duration: float = 5.0
-# Set to true when the effect needs its timer to run in real time (e.g. SlowMo).
+var player_root: Node3D
+var duration: float = 5.0       # set by Spell_Casting before add_child; -1 = permanent
 var real_time_duration: bool = false
 
 func _ready() -> void:
-	if duration > 0:
-		await get_tree().create_timer(duration, true, false, real_time_duration).timeout
-		remove_effect()
-		queue_free()
+	if duration >= 0.0:
+		get_tree().create_timer(duration, true, false, real_time_duration).timeout.connect(_on_duration_expired)
 
+func _on_duration_expired() -> void:
+	remove_effect()
+	queue_free()
+
+## Override to undo persistent changes (speed boosts, gravity changes, etc.).
+## Caller is responsible for queue_free() after calling this.
 func remove_effect() -> void:
 	pass

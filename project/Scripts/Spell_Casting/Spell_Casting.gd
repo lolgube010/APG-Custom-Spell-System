@@ -1,41 +1,36 @@
 extends Node
 
-@export var player_root: Node3D
-var wand : Node
-# State tracking
-var our_spell_array: Array          # raw compiled array (may contain spell_ref entries)
-var _flat_spell_array: Array        # pre-flattened; always kept in sync with our_spell_array
-var current_casting_type: int = -1
+const TRAIL_SCRIPT = preload("res://Scripts/Spell_Stuff/trail_component.gd")
 
-# Continuous variables
-const BASE_FIRE_RATE: float = 0.2  # seconds between shots at cast_speed 1.0
-var fire_rate_timer: Timer
+@export var player_root: Node3D
+var wand: Node
+
+var our_spell_array: Array   # raw compiled array (may contain spell_ref entries)
+var _flat_spell_array: Array # pre-flattened; always kept in sync
+var current_casting_type: int = -1
 var current_cast_speed: float = 1.0
 
-# ChargeUp variables
+const BASE_FIRE_RATE: float = 0.2
 const DEFAULT_CHARGE_DURATION: float = 1.5
-var _is_charging: bool = false
-var _charge_cancelled: bool = false
-
-# SelfInstant / SelfToggle / SelfHold
 const DEFAULT_EFFECT_DURATION: float = 5.0
-var active_toggle_effects: Dictionary = {}  # { SpellEffect value: Node }
-var _active_hold_effects: Dictionary = {}   # { SpellEffect value: Node }
-
-# SelfHold / SelfToggle repeat — re-fires one-shot effects (e.g. throws) while active
+const DEFAULT_CAST_DELAY: float = 2.0
+const SPLIT_ANGLE_STEP_DEG: float = 20.0
+const SPLIT_POS_OFFSET: float = 0.8
 const HOLD_REPEAT_INTERVAL: float = 0.5
+
+var fire_rate_timer: Timer
 var _hold_repeat_timer: Timer
 var _toggle_repeat_timer: Timer
 
-# Delayed modifier
-const DEFAULT_CAST_DELAY: float = 2.0
+var _is_charging: bool = false
+var _charge_cancelled: bool = false
 
-# Split modifier
-const SPLIT_ANGLE_STEP_DEG: float = 20.0  # degrees between adjacent split projectiles
-const SPLIT_POS_OFFSET: float = 0.8       # metres of lateral separation between splits at spawn
+var active_toggle_effects: Dictionary = {}  # { SpellEffect value → Node }
+var _active_hold_effects: Dictionary = {}   # { SpellEffect value → Node }
 
 func _ready() -> void:
 	wand = player_root.get_node("Head/CameraSmooth/Camera3D/WandMesh")
+
 	fire_rate_timer = Timer.new()
 	fire_rate_timer.wait_time = BASE_FIRE_RATE
 	fire_rate_timer.timeout.connect(_on_fire_rate_timeout)
@@ -60,47 +55,37 @@ func _on_spell_creation_spell_data_created(spell_array: Array) -> void:
 	current_casting_type = -1
 	current_cast_speed = 1.0
 	for component in _flat_spell_array:
-		# Only the FIRST casting entry sets the casting type.
-		# Expanded spell refs contribute their own casting entries; without this
-		# guard they would overwrite the top-level casting type.
 		if component["type"] == "casting" and current_casting_type == -1:
 			current_casting_type = int(component["value"])
-		elif component["type"] == "mod_float" and int(component["value"]) == SpellGlobals.SpellModifierFloat.CastSpeed:
-			current_cast_speed = maxf(0.1, component.get("amount", 1.0))
+	var cs := _find_mod("mod_float", SpellGlobals.SpellModifierFloat.CastSpeed)
+	if not cs.is_empty():
+		current_cast_speed = maxf(0.1, cs.get("amount", 1.0))
 	wand.cast_speed = current_cast_speed
 	fire_rate_timer.wait_time = BASE_FIRE_RATE / current_cast_speed
 
-func _on_spell_cast():
+func _on_spell_cast() -> void:
 	if our_spell_array.is_empty():
 		return
-
 	match current_casting_type:
 		SpellGlobals.SpellCasting.Burst:
 			_schedule_spell(wand.get_spell_spawn_transform())
-
 		SpellGlobals.SpellCasting.Continous:
 			if not fire_rate_timer.is_stopped():
 				return
 			_schedule_spell(wand.get_spell_spawn_transform())
 			fire_rate_timer.start()
-
 		SpellGlobals.SpellCasting.ChargeUp:
 			if not _is_charging:
 				_begin_charge()
-
 		SpellGlobals.SpellCasting.SelfInstant:
 			_apply_self_effects(false)
 			_fire_shape_for_self_cast()
-
 		SpellGlobals.SpellCasting.SelfToggle:
 			_apply_self_effects(true)
 			_fire_shape_for_self_cast()
-
 		SpellGlobals.SpellCasting.SelfHold:
 			var first_hold := _active_hold_effects.is_empty()
 			_apply_hold_effects()
-			# Mirror the _apply_hold_effects re-entry guard so the shape doesn't
-			# re-trigger on every wand animation callback while holding.
 			if first_hold:
 				_fire_shape_for_self_cast()
 
@@ -116,160 +101,109 @@ func _schedule_spell(spawn_transform: Transform3D, charge_multiplier: float = 0.
 	var delay := _get_cast_delay()
 	if delay > 0.0:
 		await get_tree().create_timer(delay).timeout
-
 	var split_count := _get_split_count()
-	var right := spawn_transform.basis.x  # camera-right, works for any aim direction
+	var right := spawn_transform.basis.x
 	for i in range(split_count):
-		# Centre both the angular fan and the lateral offset around shot 0.
 		var t := i - (split_count - 1) / 2.0
-		var angle := deg_to_rad(SPLIT_ANGLE_STEP_DEG * t)
 		var rotated := Transform3D(
-			Basis(Vector3.UP, angle) * spawn_transform.basis,
+			Basis(Vector3.UP, deg_to_rad(SPLIT_ANGLE_STEP_DEG * t)) * spawn_transform.basis,
 			spawn_transform.origin + right * SPLIT_POS_OFFSET * t
 		)
 		_spawn_spell_object(rotated, charge_multiplier)
 
-func _get_split_count() -> int:
-	for component in _flat_spell_array:
-		if component["type"] == "mod_int" and int(component["value"]) == SpellGlobals.SpellModifierInt.Split:
-			return maxi(1, component.get("amount", 1))
-	return 1
-
-func _apply_effect_amount(node: Node, component: Dictionary) -> void:
-	var raw = component.get("amount", null)
-	if raw == null:
-		return
-	if raw is Dictionary:
-		node.set("amount_vec", Vector3(raw.get("x", 1.0), raw.get("y", 1.0), raw.get("z", 1.0)))
-	else:
-		node.set("amount", float(raw))
-
-func _get_duration_mult() -> float:
-	for component in _flat_spell_array:
-		if component["type"] == "mod_float" and int(component["value"]) == SpellGlobals.SpellModifierFloat.Duration:
-			return maxf(0.1, component.get("amount", 1.0))
-	return 1.0
-
-func _get_cast_delay() -> float:
-	for component in _flat_spell_array:
-		if component["type"] == "mod_float" and int(component["value"]) == SpellGlobals.SpellModifierFloat.Delay:
-			return component.get("amount", DEFAULT_CAST_DELAY)
-	return 0.0
-
-func _apply_self_effects(is_toggle: bool) -> void:
-	for component in _flat_spell_array:
-		if component["type"] != "effect":
-			continue
-		var effect_value: int = component["value"]
-		if not SpellGlobals.EFFECT_SCRIPTS.has(effect_value):
-			continue
-		if is_toggle:
-			if active_toggle_effects.has(effect_value):
-				# toggle OFF — has(effect_value) is the source of truth, not node validity
-				var existing = active_toggle_effects[effect_value]
-				active_toggle_effects.erase(effect_value)
-				if is_instance_valid(existing):
-					existing.remove_effect()
-					existing.queue_free()
-				if active_toggle_effects.is_empty():
-					_toggle_repeat_timer.stop()
-				continue
-			# toggle ON — fire immediately and start repeat timer
-			var node := Node.new()
-			node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
-			node.player_root = player_root
-			node.duration = -1.0
-			_apply_effect_amount(node, component)
-			player_root.add_child(node)
-			active_toggle_effects[effect_value] = node
-			if _toggle_repeat_timer.is_stopped():
-				_toggle_repeat_timer.start()
-		else:
-			var node := Node.new()
-			node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
-			node.player_root = player_root
-			node.duration = DEFAULT_EFFECT_DURATION * _get_duration_mult()
-			_apply_effect_amount(node, component)
-			player_root.add_child(node)
-
-func _apply_hold_effects() -> void:
-	if not _active_hold_effects.is_empty():
-		return  # already holding — avoid re-entry from looping animation
-	for component in _flat_spell_array:
-		if component["type"] != "effect":
-			continue
-		var effect_value: int = component["value"]
-		if not SpellGlobals.EFFECT_SCRIPTS.has(effect_value):
-			continue
-		var node := Node.new()
-		node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
-		node.player_root = player_root
-		node.duration = -1.0
-		_apply_effect_amount(node, component)
-		player_root.add_child(node)
-		_active_hold_effects[effect_value] = node
-	if not _active_hold_effects.is_empty():
-		_hold_repeat_timer.start()
-
-func _on_hold_repeat_timeout() -> void:
-	for effect_value in _active_hold_effects.keys():
-		if not is_instance_valid(_active_hold_effects[effect_value]):
-			# one-shot effect (e.g. throw) freed itself — re-fire it
-			var component := _find_effect_component(effect_value)
-			if component.is_empty():
-				continue
-			var node := Node.new()
-			node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
-			node.player_root = player_root
-			node.duration = -1.0
-			_apply_effect_amount(node, component)
-			player_root.add_child(node)
-			_active_hold_effects[effect_value] = node
-
-func _on_toggle_repeat_timeout() -> void:
-	for effect_value in active_toggle_effects.keys():
-		if not is_instance_valid(active_toggle_effects[effect_value]):
-			var component := _find_effect_component(effect_value)
-			if component.is_empty():
-				continue
-			var node := Node.new()
-			node.set_script(SpellGlobals.EFFECT_SCRIPTS[effect_value])
-			node.player_root = player_root
-			node.duration = -1.0
-			_apply_effect_amount(node, component)
-			player_root.add_child(node)
-			active_toggle_effects[effect_value] = node
-
-func _find_effect_component(effect_value: int) -> Dictionary:
-	for component in _flat_spell_array:
-		if component["type"] == "effect" and component["value"] == effect_value:
-			return component
-	return {}
+func _on_fire_rate_timeout() -> void:
+	if wand:
+		_schedule_spell(wand.get_spell_spawn_transform())
 
 func _on_spell_stop() -> void:
 	_charge_cancelled = true
 	_is_charging = false
 	fire_rate_timer.stop()
 	_hold_repeat_timer.stop()
-	for effect_value in _active_hold_effects:
-		if is_instance_valid(_active_hold_effects[effect_value]):
-			_active_hold_effects[effect_value].remove_effect()
-			_active_hold_effects[effect_value].queue_free()
+	for node in _active_hold_effects.values():
+		if is_instance_valid(node):
+			node.remove_effect()
+			node.queue_free()
 	_active_hold_effects.clear()
 
-func _on_fire_rate_timeout() -> void:
-	if wand:
-		_schedule_spell(wand.get_spell_spawn_transform())
+func is_hold_casting() -> bool:
+	return not _active_hold_effects.is_empty()
 
-func _array_has_shape(arr: Array) -> bool:
-	for c in arr:
-		if c["type"] == "shape":
-			return true
-	return false
+# ── Self-cast effects ─────────────────────────────────────────────────────────
 
-## Returns the casting type that governs how a shape fires when combined with a
-## Self casting type. This is the SECOND casting entry in the flat array — the
-## first belongs to the Self type, the second comes from the expanded spell ref.
+func _apply_self_effects(is_toggle: bool) -> void:
+	for component in _flat_spell_array:
+		if component["type"] != "effect":
+			continue
+		var ev: int = component["value"]
+		if not SpellGlobals.EFFECT_SCRIPTS.has(ev):
+			continue
+		if is_toggle:
+			if active_toggle_effects.has(ev):
+				var existing = active_toggle_effects[ev]
+				active_toggle_effects.erase(ev)
+				if is_instance_valid(existing):
+					existing.remove_effect()
+					existing.queue_free()
+				if active_toggle_effects.is_empty():
+					_toggle_repeat_timer.stop()
+				continue
+			var node := _make_effect_node(ev, component, -1.0)
+			player_root.add_child(node)
+			active_toggle_effects[ev] = node
+			if _toggle_repeat_timer.is_stopped():
+				_toggle_repeat_timer.start()
+		else:
+			player_root.add_child(_make_effect_node(ev, component, DEFAULT_EFFECT_DURATION * _get_duration_mult()))
+
+func _apply_hold_effects() -> void:
+	if not _active_hold_effects.is_empty():
+		return
+	for component in _flat_spell_array:
+		if component["type"] != "effect":
+			continue
+		var ev: int = component["value"]
+		if not SpellGlobals.EFFECT_SCRIPTS.has(ev):
+			continue
+		var node := _make_effect_node(ev, component, -1.0)
+		player_root.add_child(node)
+		_active_hold_effects[ev] = node
+	if not _active_hold_effects.is_empty():
+		_hold_repeat_timer.start()
+
+func _apply_child_spell_effects(arr: Array, hit_transform: Transform3D = Transform3D.IDENTITY) -> void:
+	for component in arr:
+		if component["type"] != "effect":
+			continue
+		var ev := int(component["value"])
+		if not SpellGlobals.EFFECT_SCRIPTS.has(ev):
+			continue
+		var node := _make_effect_node(ev, component, DEFAULT_EFFECT_DURATION)
+		node.set("hit_position", hit_transform.origin)
+		player_root.add_child(node)
+
+## Re-fire any one-shot effects (e.g. ThrowLook) that freed themselves while still active.
+func _respawn_dead_effects(effects: Dictionary) -> void:
+	for ev in effects.keys():
+		if is_instance_valid(effects[ev]):
+			continue
+		var comp := _find_effect_component(ev)
+		if comp.is_empty():
+			continue
+		var node := _make_effect_node(ev, comp, -1.0)
+		player_root.add_child(node)
+		effects[ev] = node
+
+func _on_hold_repeat_timeout() -> void:
+	_respawn_dead_effects(_active_hold_effects)
+
+func _on_toggle_repeat_timeout() -> void:
+	_respawn_dead_effects(active_toggle_effects)
+
+# ── Shape firing for Self cast types ─────────────────────────────────────────
+
+## Returns the second casting entry's value — the shape's firing mode when a Self
+## type is combined with a spell ref containing its own casting entry.
 func _get_shape_firing_type() -> int:
 	var skipped_first := false
 	for c in _flat_spell_array:
@@ -279,10 +213,8 @@ func _get_shape_firing_type() -> int:
 			skipped_first = true
 			continue
 		return int(c["value"])
-	return SpellGlobals.SpellCasting.Burst  # default when no second casting entry
+	return SpellGlobals.SpellCasting.Burst
 
-## Fire the shape component of a Self+shape combined spell, respecting whatever
-## firing mode the embedded spell ref declared (Burst, Continuous, etc.).
 func _fire_shape_for_self_cast() -> void:
 	if not _array_has_shape(_flat_spell_array):
 		return
@@ -294,28 +226,141 @@ func _fire_shape_for_self_cast() -> void:
 		SpellGlobals.SpellCasting.ChargeUp:
 			if not _is_charging:
 				_begin_charge()
-		_:  # Burst and anything else — fire once
+		_:
 			_schedule_spell(wand.get_spell_spawn_transform())
 
-## Applies self-cast effects found in a child spell array.
-## All self-cast types (SelfInstant / SelfToggle / SelfHold) are treated as
-## one-shot with DEFAULT_EFFECT_DURATION — there's no LMB hold context here.
-func _apply_child_spell_effects(arr: Array, hit_transform: Transform3D = Transform3D.IDENTITY) -> void:
+# ── Spell object spawning ─────────────────────────────────────────────────────
+
+func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float = 0.0, spell_array: Array = []) -> Node3D:
+	var is_child_spell := not spell_array.is_empty()
+	if spell_array.is_empty():
+		spell_array = our_spell_array
+	spell_array = _flatten_spell_refs(spell_array)
+
+	var spell := SpellBase.new()
+	spell.name = "ActiveSpell"
+
+	if charge_multiplier > 0.0:
+		spell.damage *= (1.0 + charge_multiplier)
+		spell.speed  *= (1.0 + charge_multiplier * 0.5)
+
+	_apply_modifiers(spell_array, spell)
+	var has_shape := _attach_components(spell_array, spell)
+
+	if not has_shape:
+		spell.queue_free()
+		return null
+
+	if is_child_spell:
+		_apply_child_spell_effects(spell_array, spawn_transform)
+
+	if spell.has_trail:
+		var trail := Node.new()
+		trail.set_script(TRAIL_SCRIPT)
+		spell.add_child(trail)
+
+	get_tree().current_scene.add_child(spell)
+	spell.global_transform = spawn_transform
+	spell.scale = spell.scale_mult
+	return spell
+
+func _apply_modifiers(arr: Array, spell: SpellBase) -> void:
 	for component in arr:
-		if component["type"] != "effect":
-			continue
-		var ev := int(component["value"])
-		if not SpellGlobals.EFFECT_SCRIPTS.has(ev):
-			continue
-		var node := Node.new()
-		node.set_script(SpellGlobals.EFFECT_SCRIPTS[ev])
-		node.player_root = player_root
-		node.duration = DEFAULT_EFFECT_DURATION
-		_apply_effect_amount(node, component)
-		# Pass the hit position to effects that use it (e.g. TeleportToHit).
-		# set() silently no-ops for effects that don't declare hit_position.
-		node.set("hit_position", hit_transform.origin)
-		player_root.add_child(node)
+		var v := int(component["value"])
+		match component["type"]:
+			"mod_float":
+				var amount: float = component.get("amount", 1.0)
+				match v:
+					SpellGlobals.SpellModifierFloat.MoveSpeed:  spell.speed      *= amount
+					SpellGlobals.SpellModifierFloat.Duration:   spell.lifetime   *= amount
+					SpellGlobals.SpellModifierFloat.CastForce:  spell.cast_force  = amount
+			"mod_vec":
+				var amt = component.get("amount", {"x": 1.0, "y": 1.0, "z": 1.0})
+				match v:
+					SpellGlobals.SpellModifierVec.Size:
+						spell.scale_mult = Vector3(amt.get("x", 1.0), amt.get("y", 1.0), amt.get("z", 1.0))
+			"mod_bool":
+				var amount: bool = component.get("amount", false)
+				match v:
+					SpellGlobals.SpellModifierBool.Piercing:            spell.is_piercing = amount
+					SpellGlobals.SpellModifierBool.Ricochet:            spell.does_ricochet = amount
+					SpellGlobals.SpellModifierBool.EnvironmentPiercing: spell.is_environment_piercing = amount
+					SpellGlobals.SpellModifierBool.Trail:               spell.has_trail = amount
+
+func _attach_components(arr: Array, spell: SpellBase) -> bool:
+	var has_shape := false
+	for component in arr:
+		var v := int(component["value"])
+		match component["type"]:
+			"shape":
+				if SpellGlobals.SHAPE_SCENES.has(v):
+					spell.add_child(SpellGlobals.SHAPE_SCENES[v].instantiate())
+					has_shape = true
+			"path":
+				if SpellGlobals.PATH_SCRIPTS.has(v):
+					var path_node := Node.new()
+					path_node.set_script(SpellGlobals.PATH_SCRIPTS[v])
+					spell.add_child(path_node)
+			"element":
+				spell.element = v
+			"trigger":
+				spell.trigger_type = v
+				spell.child_spell_array = component.get("child_spell", [])
+				spell.spawn_child = func(child_arr: Array, xform: Transform3D):
+					_spawn_spell_object(xform, 0.0, child_arr)
+				if v == SpellGlobals.SpellTrigger.OnTimer:
+					spell.timer_trigger_interval = maxf(0.1, component.get("amount", 1.0))
+	return has_shape
+
+# ── Lookup helpers ────────────────────────────────────────────────────────────
+
+func _make_effect_node(ev: int, component: Dictionary, dur: float) -> Node:
+	var node := Node.new()
+	node.set_script(SpellGlobals.EFFECT_SCRIPTS[ev])
+	node.player_root = player_root
+	node.duration = dur
+	_apply_effect_amount(node, component)
+	return node
+
+func _apply_effect_amount(node: Node, component: Dictionary) -> void:
+	var raw = component.get("amount", null)
+	if raw == null:
+		return
+	if raw is Dictionary:
+		node.set("amount_vec", Vector3(raw.get("x", 1.0), raw.get("y", 1.0), raw.get("z", 1.0)))
+	else:
+		node.set("amount", float(raw))
+
+## Find the first flat-array entry with the given type string and integer value.
+func _find_mod(type_str: String, value: int) -> Dictionary:
+	for c in _flat_spell_array:
+		if c["type"] == type_str and int(c["value"]) == value:
+			return c
+	return {}
+
+func _find_effect_component(effect_value: int) -> Dictionary:
+	for c in _flat_spell_array:
+		if c["type"] == "effect" and int(c["value"]) == effect_value:
+			return c
+	return {}
+
+func _array_has_shape(arr: Array) -> bool:
+	for c in arr:
+		if c["type"] == "shape":
+			return true
+	return false
+
+func _get_duration_mult() -> float:
+	var c := _find_mod("mod_float", SpellGlobals.SpellModifierFloat.Duration)
+	return maxf(0.1, c.get("amount", 1.0)) if not c.is_empty() else 1.0
+
+func _get_cast_delay() -> float:
+	var c := _find_mod("mod_float", SpellGlobals.SpellModifierFloat.Delay)
+	return c.get("amount", DEFAULT_CAST_DELAY) if not c.is_empty() else 0.0
+
+func _get_split_count() -> int:
+	var c := _find_mod("mod_int", SpellGlobals.SpellModifierInt.Split)
+	return maxi(1, c.get("amount", 1)) if not c.is_empty() else 1
 
 func _flatten_spell_refs(arr: Array) -> Array:
 	var result: Array = []
@@ -323,104 +368,11 @@ func _flatten_spell_refs(arr: Array) -> Array:
 		if entry["type"] == "spell_ref":
 			var ref_array := SpellLibrary.get_spell(entry["name"])
 			if not ref_array.is_empty():
-				result.append_array(ref_array)
+				result.append_array(_flatten_spell_refs(ref_array))
+		elif entry.has("child_spell"):
+			var flat_entry: Dictionary = entry.duplicate()
+			flat_entry["child_spell"] = _flatten_spell_refs(entry["child_spell"])
+			result.append(flat_entry)
 		else:
 			result.append(entry)
 	return result
-
-func _spawn_spell_object(spawn_transform: Transform3D, charge_multiplier: float = 0.0, spell_array: Array = []) -> Node3D:
-	# Track before defaulting — child spells always pass an explicit non-empty array.
-	var is_child_spell := not spell_array.is_empty()
-	if spell_array.is_empty():
-		spell_array = our_spell_array
-
-	# Expand any spell_ref entries so both passes see a flat component list
-	spell_array = _flatten_spell_refs(spell_array)
-
-	var new_spell = SpellBase.new()
-	new_spell.name = "ActiveSpell"
-
-	if charge_multiplier > 0.0:
-		new_spell.damage *= (1.0 + charge_multiplier)
-		new_spell.speed  *= (1.0 + charge_multiplier * 0.5)
-
-	# First pass: apply modifier nodes to SpellBase stats
-	for component in spell_array:
-		match component["type"]:
-			"mod_float":
-				var amount: float = component.get("amount", 1.0)
-				match component["value"]:
-					SpellGlobals.SpellModifierFloat.MoveSpeed:
-						new_spell.speed *= amount
-					SpellGlobals.SpellModifierFloat.Duration:
-						new_spell.lifetime *= amount
-					SpellGlobals.SpellModifierFloat.CastForce:
-						pass # reserved
-			"mod_int":
-				var amount: int = component.get("amount", 1)
-				match component["value"]:
-					SpellGlobals.SpellModifierInt.Split:
-						new_spell.split_count = amount
-			"mod_vec":
-				var amt = component.get("amount", {"x": 1.0, "y": 1.0, "z": 1.0})
-				match component["value"]:
-					SpellGlobals.SpellModifierVec.Size:
-						new_spell.scale_mult = Vector3(amt.get("x", 1.0), amt.get("y", 1.0), amt.get("z", 1.0))
-			"mod_bool":
-				var amount: bool = component.get("amount", false)
-				match component["value"]:
-					SpellGlobals.SpellModifierBool.Piercing:
-						new_spell.is_piercing = amount
-					SpellGlobals.SpellModifierBool.Ricochet:
-						new_spell.does_ricochet = amount
-					SpellGlobals.SpellModifierBool.EnvironmentPiercing:
-						new_spell.is_environment_piercing = amount
-					SpellGlobals.SpellModifierBool.Trail:
-						new_spell.has_trail = amount
-
-	# Second pass: attach shape, path, element, trigger, and spell_ref components
-	# Values from JSON are floats (0.0 instead of 0); cast to int so dict lookups
-	# using enum keys work correctly (Godot 4 hashes int and float differently).
-	var has_shape := false
-	for component in spell_array:
-		match component["type"]:
-			"shape":
-				var sv := int(component["value"])
-				if SpellGlobals.SHAPE_SCENES.has(sv):
-					new_spell.add_child(SpellGlobals.SHAPE_SCENES[sv].instantiate())
-					has_shape = true
-			"path":
-				var pv := int(component["value"])
-				if SpellGlobals.PATH_SCRIPTS.has(pv):
-					var path_node = Node.new()
-					path_node.set_script(SpellGlobals.PATH_SCRIPTS[pv])
-					new_spell.add_child(path_node)
-			"element":
-				new_spell.element = int(component["value"])
-			"trigger":
-				new_spell.trigger_type = int(component["value"])
-				new_spell.child_spell_array = component.get("child_spell", [])
-				new_spell.spawn_child = func(child_arr: Array, xform: Transform3D):
-					_spawn_spell_object(xform, 0.0, child_arr)
-				if int(component["value"]) == SpellGlobals.SpellTrigger.OnTimer:
-					new_spell.timer_trigger_interval = maxf(0.1, component.get("amount", 1.0))
-
-	if is_child_spell:
-		# Child spell (fired by a trigger): apply all effects immediately at the hit point.
-		_apply_child_spell_effects(spell_array, spawn_transform)
-
-	# Don't add an invisible ghost container if no shape was attached
-	if not has_shape:
-		new_spell.queue_free()
-		return null
-
-	if new_spell.has_trail:
-		var trail := Node.new()
-		trail.set_script(load("res://Scripts/Spell_Stuff/trail_component.gd"))
-		new_spell.add_child(trail)
-
-	get_tree().current_scene.add_child(new_spell)
-	new_spell.global_transform = spawn_transform
-	new_spell.scale = new_spell.scale_mult
-
-	return new_spell

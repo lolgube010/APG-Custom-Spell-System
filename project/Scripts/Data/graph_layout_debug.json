@@ -20,20 +20,6 @@
 			"keep_alive": false,
 			"to_node": "Node_2",
 			"to_port": 2
-		},
-		{
-			"from_node": "Node_2",
-			"from_port": 2,
-			"keep_alive": false,
-			"to_node": "Simple Node 4",
-			"to_port": 6
-		},
-		{
-			"from_node": "Simple Node 4",
-			"from_port": 6,
-			"keep_alive": false,
-			"to_node": "Simple Node 3",
-			"to_port": 5
 		}
 	],
 	"nodes": {
@@ -53,7 +39,7 @@
 					"dropdown": 0
 				},
 				{
-					"dropdown": 0
+					"dropdown": 1
 				},
 				{
 					"amount": {
@@ -85,7 +71,7 @@
 					"dropdown": 0
 				},
 				{
-					"dropdown": 0
+					"dropdown": 7
 				},
 				{
 					"dropdown": 0
@@ -142,76 +128,11 @@
 			"x": 1492.0,
 			"y": 200.0
 		},
-		"Simple Node 3": {
-			"dropdown_states": [
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": 1.0,
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 11
-				},
-				{
-					"dropdown": 0
-				}
-			],
-			"is_dynamic": true,
-			"node_type": "simple",
-			"x": 2740.0,
-			"y": 200.0
-		},
-		"Simple Node 4": {
-			"dropdown_states": [
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": 1.0,
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				},
-				{
-					"amount": {
-						"x": 2.0,
-						"y": 2.0,
-						"z": 2.0
-					},
-					"dropdown": 0
-				},
-				{
-					"dropdown": 0
-				}
-			],
-			"is_dynamic": true,
-			"node_type": "simple",
-			"x": 2120.0,
-			"y": 200.0
-		},
 		"StartNode": {
 			"is_dynamic": false,
 			"node_type": "simple",
-			"x": 50.0,
-			"y": 200.0
+			"x": 80.0,
+			"y": 300.0
 		}
 	},
 	"spell_library": {

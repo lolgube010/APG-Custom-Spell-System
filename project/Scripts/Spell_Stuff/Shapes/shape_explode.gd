@@ -30,7 +30,5 @@ func _detonate() -> void:
 	for body in get_overlapping_bodies():
 		if body is StaticBody3D:
 			continue
-		if body.has_method("take_damage"):
-			body.take_damage(parent_spell.damage)
-		parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
+		_damage_body(body, global_transform)
 	parent_spell.end_spell(global_transform)

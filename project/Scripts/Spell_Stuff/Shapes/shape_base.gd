@@ -39,11 +39,19 @@ func _on_body_entered(body: Node3D) -> void:
 		parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
 		parent_spell.end_spell(global_transform)
 		return
-	if body.has_method("take_damage"):
-		body.take_damage(parent_spell.damage)
-	parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, global_transform)
+	_damage_body(body, global_transform)
 	if not parent_spell.is_piercing:
 		parent_spell.end_spell(global_transform)
+
+## Deal damage to a non-static body and fire OnHit + OnKill triggers as appropriate.
+## All shapes should call this instead of take_damage + fire_trigger directly.
+func _damage_body(body: Node3D, hit_xform: Transform3D) -> void:
+	var killed := false
+	if body.has_method("take_damage"):
+		killed = body.take_damage(parent_spell.damage)
+	parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, hit_xform)
+	if killed:
+		parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnKill, hit_xform)
 
 ## Reflect the spell off a surface using the parent spell's facing direction.
 ## Override in shapes that track their own velocity vector (e.g. Projectile).
