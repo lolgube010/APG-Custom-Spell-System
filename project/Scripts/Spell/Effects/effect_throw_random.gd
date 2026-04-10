@@ -6,5 +6,5 @@ func _ready() -> void:
 	is_one_shot = true
 	super()
 	var direction := Vector3(randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)).normalized()
-	player_root.velocity = direction * amount
+	target.velocity = direction * amount
 	queue_free()

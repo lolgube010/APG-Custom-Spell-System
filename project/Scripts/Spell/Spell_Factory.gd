@@ -6,6 +6,7 @@ extends Node
 
 const TRAIL_SCRIPT = preload("res://Scripts/Spell/Modifiers/Trail_Component.gd")
 
+
 const CONTINUOUS_INTERVAL: float = 0.5
 const CONTINUOUS_DURATION: float = 3.0
 
@@ -13,7 +14,7 @@ var player_root: Node3D
 
 ## Flatten, build, and add a spell to the scene. Pass is_child=true when spawning
 ## a trigger child spell (skips top-level-only setup).
-func spawn(spell_array: Array, spawn_transform: Transform3D, charge_multiplier: float = 0.0, is_child: bool = false) -> Node3D:
+func spawn(spell_array: Array, spawn_transform: Transform3D, charge_multiplier: float = 0.0, is_child: bool = false, hit_body: Node3D = null) -> Node3D:
 	spell_array = flatten_spell_refs(spell_array)
 
 	# Child spells with a Continuous casting entry repeat the shape at the hit
@@ -22,7 +23,7 @@ func spawn(spell_array: Array, spawn_transform: Transform3D, charge_multiplier: 
 		for c in spell_array:
 			if c["type"] == "casting" and int(c["value"]) == SpellGlobals.SpellCasting.Continous:
 				var shape_array := spell_array.filter(func(e): return e["type"] != "casting")
-				_run_continuous_child(shape_array, spawn_transform)
+				_run_continuous_child(shape_array, spawn_transform, hit_body)
 				return null
 
 	var spell := SpellBase.new()
@@ -35,12 +36,14 @@ func spawn(spell_array: Array, spawn_transform: Transform3D, charge_multiplier: 
 	_apply_modifiers(spell_array, spell)
 	var has_shape := _attach_components(spell_array, spell)
 
+	# Apply effects before the shape guard so effect-only child spells still
+	# fire (e.g. OnHit → Poison with no shape in the child).
+	if is_child:
+		_apply_child_effects(spell_array, spawn_transform, hit_body)
+
 	if not has_shape:
 		spell.queue_free()
 		return null
-
-	if is_child:
-		_apply_child_effects(spell_array, spawn_transform)
 
 	if spell.has_trail:
 		var trail := Node.new()
@@ -55,7 +58,8 @@ func spawn(spell_array: Array, spawn_transform: Transform3D, charge_multiplier: 
 func make_effect_node(ev: int, component: Dictionary, dur: float) -> Node:
 	var node := Node.new()
 	node.set_script(SpellGlobals.EFFECT_SCRIPTS[ev])
-	node.player_root = player_root
+	node.set("target", player_root)  # default; overridden for hit-targeted effects
+	node.set("caster", player_root)  # always the player; never overridden
 	node.duration = dur
 	_apply_effect_amount(node, component)
 	return node
@@ -125,13 +129,13 @@ func _attach_components(arr: Array, spell: SpellBase) -> bool:
 			"trigger":
 				spell.trigger_type = v
 				spell.child_spell_array = component.get("child_spell", [])
-				spell.spawn_child = func(child_arr: Array, xform: Transform3D):
-					spawn(child_arr, xform, 0.0, true)
+				spell.spawn_child = func(child_arr: Array, xform: Transform3D, hit_body: Node3D = null):
+					spawn(child_arr, xform, 0.0, true, hit_body)
 				if v == SpellGlobals.SpellTrigger.OnTimer:
 					spell.timer_trigger_interval = maxf(0.1, component.get("amount", 1.0))
 	return has_shape
 
-func _apply_child_effects(arr: Array, hit_transform: Transform3D) -> void:
+func _apply_child_effects(arr: Array, hit_transform: Transform3D, hit_body: Node3D = null) -> void:
 	for component in arr:
 		if component["type"] != "effect":
 			continue
@@ -140,7 +144,12 @@ func _apply_child_effects(arr: Array, hit_transform: Transform3D) -> void:
 			continue
 		var node := make_effect_node(ev, component, SpellGlobals.DEFAULT_EFFECT_DURATION)
 		node.set("hit_position", hit_transform.origin)
-		player_root.add_child(node)
+		# Effects with target_self=true (e.g. TeleportToHit, ThrowLook) always
+		# affect the caster. All others target the body that was hit.
+		var is_self : bool = node.get("target_self") == true
+		var effect_target: Node3D = player_root if (is_self or not is_instance_valid(hit_body)) else hit_body
+		node.set("target", effect_target)
+		effect_target.add_child(node)
 
 func _apply_effect_amount(node: Node, component: Dictionary) -> void:
 	var raw = component.get("amount", null)
@@ -153,12 +162,12 @@ func _apply_effect_amount(node: Node, component: Dictionary) -> void:
 
 ## Spawn `shape_array` once immediately, then repeat every CONTINUOUS_INTERVAL
 ## for CONTINUOUS_DURATION seconds. Called for child spells with Continuous casting.
-func _run_continuous_child(shape_array: Array, spawn_transform: Transform3D) -> void:
-	spawn(shape_array, spawn_transform, 0.0, true)
+func _run_continuous_child(shape_array: Array, spawn_transform: Transform3D, hit_body: Node3D = null) -> void:
+	spawn(shape_array, spawn_transform, 0.0, true, hit_body)
 	var elapsed := CONTINUOUS_INTERVAL
 	while elapsed < CONTINUOUS_DURATION:
 		await get_tree().create_timer(CONTINUOUS_INTERVAL).timeout
 		if not is_instance_valid(self):
 			return
-		spawn(shape_array, spawn_transform, 0.0, true)
+		spawn(shape_array, spawn_transform, 0.0, true, hit_body)
 		elapsed += CONTINUOUS_INTERVAL

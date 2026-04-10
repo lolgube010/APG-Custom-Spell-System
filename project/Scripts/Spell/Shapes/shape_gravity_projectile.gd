@@ -11,7 +11,12 @@ var _spawn_ready: bool = false
 
 func _ready() -> void:
 	super()
+	body_exited.connect(_on_gravity_body_exited)
 	get_tree().create_timer(SPAWN_GRACE).timeout.connect(func(): _spawn_ready = true)
+
+func _on_gravity_body_exited(body: Node3D) -> void:
+	if body is CharacterBody3D:
+		body.velocity = Vector3(0.0, body.velocity.y, 0.0)
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(parent_spell):

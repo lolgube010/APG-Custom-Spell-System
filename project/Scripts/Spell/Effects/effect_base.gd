@@ -1,7 +1,8 @@
 class_name EffectBase
 extends Node
 
-var player_root: Node3D
+var target: Node3D
+var caster: Node3D  # always the player; used by effects that need player context (e.g. ThrowLook)
 var duration: float = 5.0       # set by Spell_Casting before add_child; -1 = permanent
 var real_time_duration: bool = false
 var is_one_shot: bool = false   # set true before super() to skip the duration timer entirely

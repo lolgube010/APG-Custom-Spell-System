@@ -9,9 +9,12 @@ static var _walk_base: float = 0.0
 static var _sprint_base: float = 0.0
 
 func _ready() -> void:
+	if not "WalkSpeed" in target:
+		queue_free()
+		return
 	if _stack.is_empty():
-		_walk_base = player_root.WalkSpeed
-		_sprint_base = player_root.SprintSpeed
+		_walk_base = target.WalkSpeed
+		_sprint_base = target.SprintSpeed
 	_stack.append(amount)
 	_apply_stack()
 	super()
@@ -21,6 +24,8 @@ func remove_effect() -> void:
 	_apply_stack()
 
 func _apply_stack() -> void:
-	var total : float = _stack.reduce(func(a, b): return a * b, 1.0)
-	player_root.WalkSpeed = _walk_base * total
-	player_root.SprintSpeed = _sprint_base * total
+	if not is_instance_valid(target) or not "WalkSpeed" in target:
+		return
+	var total: float = _stack.reduce(func(a, b): return a * b, 1.0)
+	target.WalkSpeed = _walk_base * total
+	target.SprintSpeed = _sprint_base * total

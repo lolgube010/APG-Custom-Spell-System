@@ -42,7 +42,7 @@ func _run_timer_trigger() -> void:
 			return
 		fire_trigger(SpellGlobals.SpellTrigger.OnTimer, global_transform)
 
-func fire_trigger(type: int, xform: Transform3D) -> void:
+func fire_trigger(type: int, xform: Transform3D, hit_body: Node3D = null) -> void:
 	if type != trigger_type or child_spell_array.is_empty() or not spawn_child.is_valid():
 		return
-	spawn_child.call(child_spell_array, xform)
+	spawn_child.call(child_spell_array, xform, hit_body)

@@ -13,4 +13,7 @@ func _start_poison() -> void:
 		await get_tree().create_timer(TICK_INTERVAL).timeout
 		if not is_instance_valid(self):
 			break
-		player_root.HealthSystem.TakeDamage(amount)
+		if target.has_method("take_damage"):
+			target.take_damage(amount)
+		elif target.get("HealthSystem") != null:
+			target.HealthSystem.TakeDamage(amount)

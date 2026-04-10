@@ -6,5 +6,5 @@ func _ready() -> void:
 	super()
 
 func _physics_process(_delta: float) -> void:
-	if not player_root: return
-	player_root.velocity = Vector3(player_root.velocity.x, amount, player_root.velocity.z)
+	if not target: return
+	target.velocity = Vector3(target.velocity.x, amount, target.velocity.z)

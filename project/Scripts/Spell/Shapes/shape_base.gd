@@ -78,9 +78,9 @@ func _damage_body(body: Node3D, hit_xform: Transform3D) -> void:
 	var killed := false
 	if body.has_method("take_damage"):
 		killed = body.take_damage(parent_spell.damage)
-	parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, hit_xform)
+	parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnHit, hit_xform, body)
 	if killed:
-		parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnKill, hit_xform)
+		parent_spell.fire_trigger(SpellGlobals.SpellTrigger.OnKill, hit_xform, body)
 
 ## Reflect the spell off a surface using the parent spell's facing direction.
 ## Override in shapes that track their own velocity vector (e.g. Projectile).

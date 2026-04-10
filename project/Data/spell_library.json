@@ -36,5 +36,24 @@
 			"type": "path",
 			"value": 0.0
 		}
+	],
+	"Gravity Pierce": [
+		{
+			"type": "casting",
+			"value": 0
+		},
+		{
+			"type": "shape",
+			"value": 6
+		},
+		{
+			"type": "path",
+			"value": 0
+		},
+		{
+			"amount": true,
+			"type": "mod_bool",
+			"value": 0
+		}
 	]
 }

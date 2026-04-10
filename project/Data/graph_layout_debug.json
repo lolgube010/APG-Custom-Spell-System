@@ -1,0 +1,113 @@
+{
+	"connections": [
+		{
+			"from_node": "StartNode",
+			"from_port": 0,
+			"keep_alive": false,
+			"to_node": "Node_0",
+			"to_port": 4
+		}
+	],
+	"nodes": {
+		"Node_0": {
+			"dropdown_states": [
+				{
+					"dropdown": 0
+				},
+				{
+					"amount": 1.0,
+					"dropdown": 0
+				},
+				{
+					"dropdown": 0
+				},
+				{
+					"dropdown": 0
+				},
+				{
+					"dropdown": 0
+				},
+				{
+					"amount": {
+						"x": 2.0,
+						"y": 2.0,
+						"z": 2.0
+					},
+					"dropdown": 0
+				},
+				{
+					"dropdown": 0
+				}
+			],
+			"is_dynamic": true,
+			"node_type": "simple",
+			"x": 243.0,
+			"y": 200.0
+		},
+		"StartNode": {
+			"is_dynamic": false,
+			"node_type": "simple",
+			"x": 50.0,
+			"y": 200.0
+		}
+	},
+	"spell_library": {
+		"Beam": [
+			{
+				"type": "casting",
+				"value": 1.0
+			},
+			{
+				"type": "shape",
+				"value": 2.0
+			},
+			{
+				"type": "path",
+				"value": 0.0
+			}
+		],
+		"Explode": [
+			{
+				"type": "casting",
+				"value": 0.0
+			},
+			{
+				"type": "shape",
+				"value": 3.0
+			}
+		],
+		"Fireball": [
+			{
+				"type": "casting",
+				"value": 0.0
+			},
+			{
+				"type": "shape",
+				"value": 0.0
+			},
+			{
+				"type": "path",
+				"value": 0.0
+			}
+		],
+		"Gravity Pierce": [
+			{
+				"type": "casting",
+				"value": 0
+			},
+			{
+				"type": "shape",
+				"value": 6
+			},
+			{
+				"type": "path",
+				"value": 0
+			},
+			{
+				"amount": true,
+				"type": "mod_bool",
+				"value": 0
+			}
+		]
+	}
+}

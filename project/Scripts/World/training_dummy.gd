@@ -7,6 +7,13 @@ var hp: float = MAX_HP
 var _mesh_mat: StandardMaterial3D
 var _is_dead: bool = false
 
+const GRAVITY: float = 9.8
+
+func _physics_process(delta: float) -> void:
+	if not is_on_floor():
+		velocity.y -= GRAVITY * delta
+	move_and_slide()
+
 func _ready() -> void:
 	add_to_group("enemies")
 	var mi := get_node_or_null("MeshInstance3D") as MeshInstance3D
@@ -27,6 +34,7 @@ func take_damage(amount: float) -> bool:
 	return false
 
 func _on_death() -> void:
+	velocity = Vector3.ZERO
 	_is_dead = true
 	remove_from_group("enemies")
 	var mi := get_node_or_null("MeshInstance3D") as MeshInstance3D
@@ -40,6 +48,7 @@ func _on_death() -> void:
 func _respawn() -> void:
 	hp = MAX_HP
 	_is_dead = false
+	velocity = Vector3.ZERO
 	add_to_group("enemies")
 	var col := get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if col:
