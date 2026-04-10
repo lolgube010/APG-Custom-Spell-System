@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://d21a5y6v5avp0"]
+
+[ext_resource type="Script" path="res://Scripts/Spell/Shapes/shape_base.gd" id="1_5wxw5"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_opvpx"]
+albedo_color = Color(1, 0.11372549, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_5wxw5"]
+material = SubResource("StandardMaterial3D_opvpx")
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_5wxw5"]
+
+[node name="ShapeOrb" type="Area3D" unique_id=124830604]
+script = ExtResource("1_5wxw5")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=809132490]
+mesh = SubResource("SphereMesh_5wxw5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=618699440]
+shape = SubResource("SphereShape3D_5wxw5")

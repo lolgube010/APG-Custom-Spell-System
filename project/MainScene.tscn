@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://l676rw2rur7f" path="res://Scripts/main_scene.gd" id="1_rpqi1"]
 [ext_resource type="PackedScene" uid="uid://dj20y2vuteryh" path="res://Scripts/Spell_Creation/SpellCreation.tscn" id="2_x4av3"]
 [ext_resource type="Script" uid="uid://def4s2ew44578" path="res://Scripts/Spell_Casting/Spell_Casting.gd" id="4_uxrcv"]
-[ext_resource type="PackedScene" path="res://Scripts/TrainingDummy.tscn" id="5_dummy"]
+[ext_resource type="PackedScene" path="res://Scenes/TrainingDummy.tscn" id="5_dummy"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_3mqji"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)

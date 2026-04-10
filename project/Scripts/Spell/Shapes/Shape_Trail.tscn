@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://btp1ucn2tyvu1"]
+
+[ext_resource type="Script" path="res://Scripts/Spell/Shapes/shape_trail.gd" id="1_tral"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tral"]
+albedo_color = Color(1.0, 0.2, 0.8, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_tral"]
+material = SubResource("StandardMaterial3D_tral")
+radius = 0.5
+height = 1.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_tral"]
+radius = 0.5
+
+[node name="ShapeTrail" type="Area3D" unique_id=100000070]
+script = ExtResource("1_tral")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=100000071]
+mesh = SubResource("SphereMesh_tral")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=100000072]
+shape = SubResource("SphereShape3D_tral")
