@@ -5,7 +5,7 @@
 [ext_resource type="Material" uid="uid://nyh5tn1yoxeu" path="res://addons/player_controller/Shaders/CameraDistortion.tres" id="3_mxh1y"]
 [ext_resource type="Shader" uid="uid://btw6vsb6sa7sn" path="res://addons/player_controller/Shaders/Blur.gdshader" id="4_jyscr"]
 [ext_resource type="Script" uid="uid://dv7v1ywmbvvcd" path="res://addons/player_controller/Scripts/HealthSystem.cs" id="5_umw0l"]
-[ext_resource type="Script" uid="uid://djtjpkv5wh4th" path="res://Scripts/Spell_Casting/wand_mesh.gd" id="6_jkvsg"]
+[ext_resource type="Script" uid="uid://djtjpkv5wh4th" path="res://Scripts/Spell/Wand_Mesh.gd" id="6_jkvsg"]
 [ext_resource type="Script" uid="uid://vuq8rjq3vegn" path="res://addons/player_controller/Scripts/Stamina.cs" id="6_lxtc4"]
 [ext_resource type="Script" uid="uid://cwbvxlfvmocc1" path="res://addons/player_controller/Scripts/StairsSystem.cs" id="7_bmt5a"]
 [ext_resource type="Script" uid="uid://dd1yrt7eiiyf4" path="res://addons/player_controller/Scripts/CapsuleCollider.cs" id="8_lmtjd"]
@@ -264,7 +264,7 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 
 visible = false
 
 [node name="WandMesh" type="MeshInstance3D" parent="Head/CameraSmooth/Camera3D" unique_id=2115543607 node_paths=PackedStringArray("camera", "wand_point")]
-transform = Transform3D(0.092913106, 0, 0, 0, 0.08838957, -0.20125203, 0, 0.027845375, 0.63883424, 0.633714, -0.38306212, -0.96050835)
+transform = Transform3D(0.092913106, 0, 0, 0, 0.088389575, -0.20125203, 0, 0.027845377, 0.63883424, 0.633714, -0.38306212, -0.96050835)
 mesh = SubResource("BoxMesh_p870g")
 script = ExtResource("6_jkvsg")
 camera = NodePath("..")

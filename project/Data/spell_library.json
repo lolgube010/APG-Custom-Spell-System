@@ -1,14 +1,5 @@
 {
-	"Beam Levitation": [
-		{
-			"type": "casting",
-			"value": 5.0
-		},
-		{
-			"amount": 3.0,
-			"type": "effect",
-			"value": 3.0
-		},
+	"Beam": [
 		{
 			"type": "casting",
 			"value": 1.0
@@ -20,6 +11,16 @@
 		{
 			"type": "path",
 			"value": 0.0
+		}
+	],
+	"Explode": [
+		{
+			"type": "casting",
+			"value": 0.0
+		},
+		{
+			"type": "shape",
+			"value": 3.0
 		}
 	],
 	"Fireball": [

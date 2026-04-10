@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://egt0er8m1ktx"]
 
-[ext_resource type="Script" uid="uid://bjhuox06gt1fi" path="res://Scripts/Spell_Creation/start_node.gd" id="1_ltuu3"]
+[ext_resource type="Script" uid="uid://bjhuox06gt1fi" path="res://Scripts/UI/Start_Node.gd" id="1_ltuu3"]
 
 [node name="StartNode" type="GraphNode" unique_id=928985921]
 script = ExtResource("1_ltuu3")

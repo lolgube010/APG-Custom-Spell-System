@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bkvxlxi7adoul"]
 
-[ext_resource type="Script" uid="uid://dvvk5e3sr3i0p" path="res://Scripts/training_dummy.gd" id="1_dummy"]
+[ext_resource type="Script" uid="uid://dvvk5e3sr3i0p" path="res://Scripts/World/Training_Dummy.gd" id="1_dummy"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dummy"]
 albedo_color = Color(0.78, 0.44, 0.18, 1)

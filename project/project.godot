@@ -13,7 +13,7 @@ config_version=5
 config/name="Strange Hands"
 run/main_scene="uid://d0fh6mm2r7c6q"
 config/features=PackedStringArray("4.6", "C#")
-config/icon="res://stuff/icon.png"
+config/icon="res://misc/icon.png"
 
 [autoload]
 
@@ -22,7 +22,7 @@ SceneLoader="*res://addons/maaacks_game_template/base/nodes/autoloads/scene_load
 ProjectMusicController="*res://addons/maaacks_game_template/base/nodes/autoloads/music_controller/project_music_controller.tscn"
 ProjectUISoundController="*res://addons/maaacks_game_template/base/nodes/autoloads/ui_sound_controller/project_ui_sound_controller.tscn"
 SpellGlobals="*uid://27l0wn6oe2vv"
-SpellLibrary="*res://Scripts/UI/SpellLibrary.gd"
+SpellLibrary="*res://Scripts/UI/Spell_Library.gd"
 
 [display]
 

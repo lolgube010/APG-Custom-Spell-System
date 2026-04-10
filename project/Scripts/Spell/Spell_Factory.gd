@@ -4,7 +4,10 @@ extends Node
 ## Assembles and spawns SpellBase objects from a compiled spell array.
 ## Spell_Casting owns one instance of this and delegates all object creation here.
 
-const TRAIL_SCRIPT = preload("res://Scripts/Spell/trail_component.gd")
+const TRAIL_SCRIPT = preload("res://Scripts/Spell/Modifiers/Trail_Component.gd")
+
+const CONTINUOUS_INTERVAL: float = 0.5
+const CONTINUOUS_DURATION: float = 3.0
 
 var player_root: Node3D
 
@@ -12,6 +15,15 @@ var player_root: Node3D
 ## a trigger child spell (skips top-level-only setup).
 func spawn(spell_array: Array, spawn_transform: Transform3D, charge_multiplier: float = 0.0, is_child: bool = false) -> Node3D:
 	spell_array = flatten_spell_refs(spell_array)
+
+	# Child spells with a Continuous casting entry repeat the shape at the hit
+	# point for CONTINUOUS_DURATION seconds instead of firing only once.
+	if is_child:
+		for c in spell_array:
+			if c["type"] == "casting" and int(c["value"]) == SpellGlobals.SpellCasting.Continous:
+				var shape_array := spell_array.filter(func(e): return e["type"] != "casting")
+				_run_continuous_child(shape_array, spawn_transform)
+				return null
 
 	var spell := SpellBase.new()
 	spell.name = "ActiveSpell"
@@ -138,3 +150,15 @@ func _apply_effect_amount(node: Node, component: Dictionary) -> void:
 		node.set("amount_vec", Vector3(raw.get("x", 1.0), raw.get("y", 1.0), raw.get("z", 1.0)))
 	else:
 		node.set("amount", float(raw))
+
+## Spawn `shape_array` once immediately, then repeat every CONTINUOUS_INTERVAL
+## for CONTINUOUS_DURATION seconds. Called for child spells with Continuous casting.
+func _run_continuous_child(shape_array: Array, spawn_transform: Transform3D) -> void:
+	spawn(shape_array, spawn_transform, 0.0, true)
+	var elapsed := CONTINUOUS_INTERVAL
+	while elapsed < CONTINUOUS_DURATION:
+		await get_tree().create_timer(CONTINUOUS_INTERVAL).timeout
+		if not is_instance_valid(self):
+			return
+		spawn(shape_array, spawn_transform, 0.0, true)
+		elapsed += CONTINUOUS_INTERVAL

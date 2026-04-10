@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bpggdkyhwivgg"]
 
-[ext_resource type="Script" uid="uid://bgk0nf4rrj1bx" path="res://Scripts/Spell_Creation/graph_node.gd" id="1_1ysll"]
+[ext_resource type="Script" uid="uid://bgk0nf4rrj1bx" path="res://Scripts/UI/Graph_Node.gd" id="1_1ysll"]
 
 [node name="GraphNode" type="GraphNode" unique_id=1257430505]
 offset_right = 356.0
