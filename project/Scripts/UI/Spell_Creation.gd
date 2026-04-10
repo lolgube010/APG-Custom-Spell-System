@@ -10,7 +10,7 @@ var nodeCount: int = 0
 
 signal spell_data_created(spell_array: Array)
 
-const SAVE_PATH = "res://Data/graph_layout_debug.json"
+var _save_path: String
 
 var _library_list: VBoxContainer
 var _library_panel: Panel
@@ -23,6 +23,11 @@ const PANEL_MIN_H    = 110
 const PANEL_MAX_H    = 460
 
 func _ready() -> void:
+	if OS.has_feature("editor"):
+		_save_path = "res://Data/graph_layout_debug.json"
+	else:
+		_save_path = OS.get_executable_path().get_base_dir().path_join("graph_layout.json")
+
 	var start_node = startGraphNode.instantiate()
 	start_node.name = "StartNode"
 	start_node.position_offset = Vector2(50, 200)
@@ -314,7 +319,7 @@ func save_graph_layout() -> void:
 		return
 	graph_data["connections"] = $GraphEdit.get_connection_list()
 	graph_data["spell_library"] = SpellLibrary.get_library_dict()
-	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file = FileAccess.open(_save_path, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(graph_data, "\t"))
 		file.close()
@@ -322,10 +327,10 @@ func save_graph_layout() -> void:
 	broadcast_spell_update()
 
 func load_graph_layout() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not FileAccess.file_exists(_save_path):
 		print("save file not found!")
 		return
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file := FileAccess.open(_save_path, FileAccess.READ)
 	var json := JSON.new()
 	var error := json.parse(file.get_as_text())
 	file.close()
@@ -358,8 +363,9 @@ func load_graph_layout() -> void:
 	broadcast_spell_update()
 
 func clear_saved_graph_layout() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		var err := DirAccess.remove_absolute(SAVE_PATH)
+	if FileAccess.file_exists(_save_path):
+		var dir := DirAccess.open(_save_path.get_base_dir())
+		var err := dir.remove(_save_path.get_file()) if dir else ERR_CANT_OPEN
 		print("Saved graph layout deleted." if err == OK else "Error deleting save file. Code: %d" % err)
 	else:
 		print("No save file found to clear.")

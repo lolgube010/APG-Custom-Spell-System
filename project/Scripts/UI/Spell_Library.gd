@@ -1,7 +1,5 @@
 extends Node
 
-const LIBRARY_PATH = "res://Data/spell_library.json"
-
 # { "Spell_1": [...array...], "Spell_2": [...] }
 var _library: Dictionary = {}
 
@@ -53,16 +51,22 @@ func _next_name() -> String:
 		i += 1
 	return "Spell_%d" % i
 
+func _get_path() -> String:
+	if OS.has_feature("editor"):
+		return "res://Data/spell_library.json"
+	return OS.get_executable_path().get_base_dir().path_join("spell_library.json")
+
 func _persist() -> void:
-	var file := FileAccess.open(LIBRARY_PATH, FileAccess.WRITE)
+	var file := FileAccess.open(_get_path(), FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(_library, "\t"))
 		file.close()
 
 func _load() -> void:
-	if not FileAccess.file_exists(LIBRARY_PATH):
+	var path := _get_path()
+	if not FileAccess.file_exists(path):
 		return
-	var file := FileAccess.open(LIBRARY_PATH, FileAccess.READ)
+	var file := FileAccess.open(path, FileAccess.READ)
 	if not file:
 		return
 	var json := JSON.new()
