@@ -1,6 +1,7 @@
 # Strange Hands — Custom Spell System
 
 A Godot 4.6 demo where you can visually design customized spells trough a node graph, then cast them in real time as 3D projectiles.
+Made during my internship at Adventure Party Games.
 
 <video src="https://github.com/user-attachments/assets/9b61177c-6328-40e8-b00e-4c77da344ec9" controls width="100%"></video>
 
